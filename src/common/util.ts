@@ -1,0 +1,58 @@
+import type { IDetailData } from '@/api';
+import type Player from 'video.js/dist/types/player';
+
+export function getComponentByDescendant(video: Player, name: string): any {
+    if (!video.children?.()?.length) return;
+    for (let i = 0; i < video.children().length; i++) {
+        const child = video.children()[i];
+        if (child instanceof HTMLElement) continue;
+        if (child?.name?.() === name) return child;
+        const isFounded = getComponentByDescendant(child, name);
+        if (isFounded) return isFounded;
+    }
+}
+
+export function createEmptyDetailData(): IDetailData {
+    return {
+        vod_time: '',
+        vod_id: '',
+        vod_name: '',
+        vod_enname: '',
+        vod_sub: '',
+        vod_letter: '',
+        vod_color: '',
+        vod_tag: '',
+        vod_class: '',
+        type_id: '',
+        type_name: '',
+        vod_pic: '',
+        vod_lang: '',
+        vod_area: '',
+        vod_year: '',
+        vod_remarks: '',
+        vod_actor: '',
+        vod_director: '',
+        vod_serial: '',
+        vod_isend: 0,
+        vod_lock: '',
+        vod_level: '',
+        vod_hits: '',
+        vod_hits_day: '',
+        vod_hits_week: '',
+        vod_hits_month: '',
+        vod_duration: '',
+        vod_up: '',
+        vod_down: '',
+        vod_score: '',
+        vod_score_all: '',
+        vod_score_num: '',
+        vod_points_play: '',
+        vod_points_down: '',
+        vod_content: '',
+        vod_play_from: '',
+        vod_play_note: '',
+        vod_play_server: '',
+        vod_play_url: '',
+        vod_play_url_parse: [],
+    };
+}
