@@ -62,14 +62,17 @@ export interface IDetailData {
     vod_play_url_parse: string[];
 }
 
-export async function getList(wd: string, pg?: number): Promise<IResponseData<IVodItem>> {
-    const { data } = await axios.get('/inc/api_mac10.php', {
+export async function getList(
+    wd: string,
+    pg?: number,
+): Promise<IResponseData<IVodItem> & { code: number; redirectHtmlData?: string }> {
+    const res = await axios.get('/inc/api_mac10.php', {
         params: {
             wd,
             pg,
         },
     });
-    return data;
+    return res.data;
 }
 
 export async function getDetail(ids: string): Promise<IResponseData<IDetailData>> {

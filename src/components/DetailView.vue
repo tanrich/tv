@@ -23,6 +23,7 @@ async function initVideo(options = {}) {
                         backward: 30,
                     },
                 },
+                playbackRates: [0.5, 1, 1.5, 2],
                 userActions: {
                     hotkeys: ({ which }: { which: number }) => {
                         switch (which) {
@@ -75,9 +76,9 @@ const loadVideo = async (src: string) => {
     videoData.src = src;
 };
 const playVideo = async (src: string) => {
-    // await loadVideo(src);
-    // videoComponent?.play();
-    videoData.src = `https://vip.zykbf.com/?url=${src}`;
+    await loadVideo(src);
+    videoComponent?.play();
+    // videoData.src = `https://vip.zykbf.com/?url=${src}`;
 };
 
 onMounted(() => {
@@ -144,8 +145,8 @@ watch(
             </div>
         </div>
         <div class="video-wrapper" ref="videoWrapperRef" @keydown.stop>
-            <!-- <video id="video" class="video-js" preload="auto" @keydown.prevent></video> -->
-            <iframe :src="videoData.src" frameborder="0"></iframe>
+            <video id="video" class="video-js" preload="auto" @keydown.prevent></video>
+            <!-- <iframe :src="videoData.src" frameborder="0"></iframe> -->
         </div>
     </div>
 </template>

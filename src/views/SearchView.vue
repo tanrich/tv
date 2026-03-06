@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onBeforeMount, onMounted, reactive, ref, watch } from 'vue';
+import { computed, nextTick, onBeforeMount, onMounted, reactive, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { Tag, Card, Spin, Page, Exception } from 'view-ui-plus';
 import SearchComponent from '../components/SearchComponent.vue';
@@ -25,6 +25,8 @@ const data = reactive<{
 });
 const isLoading = ref(false);
 const isShowDetailPage = computed(() => !!data.detailData.vod_id);
+const autoIFrame = ref();
+const isShowAuthValidate = ref(false);
 
 onBeforeMount(() => {
     watch(
@@ -49,7 +51,21 @@ async function showLoading<T>(cb: () => Promise<T>) {
 const updateList = async (page?: number) => {
     showLoading(async () => {
         const result = await getList(wd.value, page);
-        data.pageData = result;
+        if (result.code !== 1) {
+            isShowAuthValidate.value = true;
+            nextTick(() => {
+                autoIFrame.value.contentDocument.write(result.redirectHtmlData);
+            });
+            return;
+        }
+
+        data.pageData = {
+            page: result.page,
+            pagecount: result.pagecount,
+            limit: result.limit,
+            total: result.total,
+            list: result.list,
+        };
     });
 };
 const updateQuery = (keyword: string) => {
@@ -118,6 +134,10 @@ const updateDetail = async (vodId: string) => {
         </Exception>
         <div class="loading" v-show="isLoading">
             <Spin fix size="large"></Spin>
+        </div>
+        <div class="auth-validate" v-if="isShowAuthValidate">
+            <p>提交验证信息后，请手动刷新页面</p>
+            <iframe class="auth-iframe" ref="autoIFrame" frameborder="0"></iframe>
         </div>
     </div>
 </template>
@@ -210,6 +230,31 @@ const updateDetail = async (vodId: string) => {
             margin: 10px 20px;
             box-sizing: border-box;
             transition: all 0.3s ease;
+        }
+    }
+
+    .auth-validate {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 400px;
+        height: 400px;
+        margin-left: -200px;
+        margin-top: -200px;
+        background-color: #fff;
+        z-index: 9999;
+        border: 1px solid #eee;
+
+        p {
+            line-height: 40px;
+            text-align: center;
+            font-weight: bold;
+            color: red;
+        }
+
+        .auth-iframe {
+            width: 400px;
+            height: 350px;
         }
     }
 }
