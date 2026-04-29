@@ -67,6 +67,23 @@ function initArtplayer(src: string, danmuku: IArtplayerDanmuku[] = []) {
         lock: true,
         fastForward: true,
         theme: '#4285F4',
+        layers: [
+            {
+                name: 'fullscreenHeader',
+                html: `<div class="fs-header">
+                    <button class="fs-back-btn">&lt;</button>
+                    <span class="fs-title"></span>
+                </div>`,
+                style: {
+                    position: 'absolute',
+                    top: '0',
+                    left: '0',
+                    right: '0',
+                    zIndex: '60',
+                    pointerEvents: 'none',
+                },
+            },
+        ],
         settings: [
             {
                 html: '弹幕',
@@ -103,6 +120,27 @@ function initArtplayer(src: string, danmuku: IArtplayerDanmuku[] = []) {
         flushProgress();
     });
     art.on('video:pause', () => flushProgress());
+
+    // Fullscreen header toolbar — visibility controlled by CSS
+    const headerLayer = art.layers['fullscreenHeader'];
+    if (headerLayer) {
+        const backBtn = headerLayer.querySelector('.fs-back-btn') as HTMLElement;
+        const titleEl = headerLayer.querySelector('.fs-title') as HTMLElement;
+        if (backBtn) {
+            backBtn.style.pointerEvents = 'auto';
+            backBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                if (!art) return;
+                if (art.fullscreen) art.fullscreen = false;
+                else if (art.fullscreenWeb) art.fullscreenWeb = false;
+            });
+        }
+        const setTitle = () => {
+            if (titleEl) titleEl.textContent = props.data.vod_name || '';
+        };
+        art.on('fullscreen', setTitle);
+        art.on('fullscreenWeb', setTitle);
+    }
 }
 
 const resetVideo = () => {
@@ -365,6 +403,49 @@ onBeforeUnmount(() => {
             width: 100%;
             aspect-ratio: 16 / 9;
         }
+
+        :deep(.fs-header) {
+            display: flex;
+            align-items: center;
+            padding: 14px 16px;
+            padding-top: max(14px, env(safe-area-inset-top));
+            background: linear-gradient(to bottom, rgba(0, 0, 0, 0.5) 0%, rgba(0, 0, 0, 0.15) 70%, transparent 100%);
+            color: #fff;
+            min-height: 48px;
+
+            .fs-back-btn {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                width: 44px;
+                height: 44px;
+                margin: -10px;
+                margin-right: -4px;
+                border: none;
+                border-radius: 50%;
+                background: transparent;
+                color: #fff;
+                font-size: 22px;
+                font-weight: 300;
+                cursor: pointer;
+                flex-shrink: 0;
+                -webkit-tap-highlight-color: transparent;
+
+                &:active {
+                    background: rgba(255, 255, 255, 0.12);
+                }
+            }
+
+            .fs-title {
+                margin-left: 4px;
+                font-size: 16px;
+                font-weight: 500;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+                text-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
+            }
+        }
     }
 }
 
@@ -414,5 +495,32 @@ onBeforeUnmount(() => {
             }
         }
     }
+}
+</style>
+
+<style lang="less">
+/* Global styles for fullscreen mode (DOM is hoisted to body, outside scoped scope) */
+
+/* Fullscreen header toolbar: hidden by default, show on hover in fullscreen, hide when locked */
+.art-layer-fullscreenHeader {
+    display: none !important;
+}
+
+.art-fullscreen.art-hover:not(.art-lock) .art-layer-fullscreenHeader,
+.art-fullscreen-web.art-hover:not(.art-lock) .art-layer-fullscreenHeader {
+    display: block !important;
+}
+
+/* Non-fullscreen: also hidden (layer is inside .art-player in normal mode) */
+.art-player .art-layer-fullscreenHeader {
+    display: none !important;
+}
+
+/* Fullscreen: increase control bar safe area padding */
+.art-fullscreen .art-bottom,
+.art-fullscreen-web .art-bottom {
+    padding-bottom: max(10px, env(safe-area-inset-bottom)) !important;
+    padding-left: max(16px, env(safe-area-inset-left)) !important;
+    padding-right: max(16px, env(safe-area-inset-right)) !important;
 }
 </style>
