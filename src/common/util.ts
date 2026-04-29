@@ -1,16 +1,4 @@
 import type { IDetailData } from '@/api';
-import type Player from 'video.js/dist/types/player';
-
-export function getComponentByDescendant(video: Player, name: string): any {
-    if (!video.children?.()?.length) return;
-    for (let i = 0; i < video.children().length; i++) {
-        const child = video.children()[i];
-        if (child instanceof HTMLElement) continue;
-        if (child?.name?.() === name) return child;
-        const isFounded = getComponentByDescendant(child, name);
-        if (isFounded) return isFounded;
-    }
-}
 
 export function createEmptyDetailData(): IDetailData {
     return {

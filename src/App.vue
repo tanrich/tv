@@ -12,7 +12,8 @@ import { RouterView } from 'vue-router';
 .main {
     width: 100%;
     min-height: 100vh;
-    background-color: #fff;
-    color: #333;
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+    transition: background-color 0.3s ease, color 0.3s ease;
 }
 </style>

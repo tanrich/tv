@@ -1,4 +1,4 @@
-/* color palette from <https://github.com/vuejs/theme> */
+/* color palette */
 :root {
     --vt-c-white: #ffffff;
     --vt-c-white-soft: #f8f8f8;
@@ -21,30 +21,141 @@
     --vt-c-text-dark-2: rgba(235, 235, 235, 0.64);
 }
 
-/* semantic color variables for this project */
+/* semantic color variables - light mode (default) */
 :root {
+    --bg-primary: #ffffff;
+    --bg-secondary: #f8f9fa;
+    --bg-elevated: #ffffff;
+    --bg-card: #ffffff;
+    --bg-hover: #f1f3f4;
+
+    --text-primary: #202124;
+    --text-secondary: #5f6368;
+    --text-tertiary: #70757a;
+    --text-link: #1a73e8;
+    --text-accent: #007722;
+
+    --border-color: #dfe1e5;
+    --border-color-hover: #c0c0c0;
+    --shadow-color: rgba(32, 33, 36, 0.28);
+    --shadow-sm: 0 1px 3px rgba(32, 33, 36, 0.12);
+    --shadow-md: 0 1px 6px rgba(32, 33, 36, 0.28);
+    --shadow-lg: 0 4px 12px rgba(32, 33, 36, 0.18);
+
+    --search-bg: #ffffff;
+    --search-border: #dfe1e5;
+    --search-border-focus: #4285f4;
+
+    --tag-bg: #e8f0fe;
+    --tag-text: #1967d2;
+
+    --btn-primary-bg: #4285f4;
+    --btn-primary-text: #ffffff;
+    --btn-default-bg: #f8f9fa;
+    --btn-default-text: #3c4043;
+    --btn-default-border: #dadce0;
+
+    --divider: #ebebeb;
+    --scrollbar-thumb: #dadce0;
+
     --color-background: var(--vt-c-white);
     --color-background-soft: var(--vt-c-white-soft);
     --color-background-mute: var(--vt-c-white-mute);
-
     --color-border: var(--vt-c-divider-light-2);
     --color-border-hover: var(--vt-c-divider-light-1);
-
     --color-heading: var(--vt-c-text-light-1);
     --color-text: var(--vt-c-text-light-1);
-
-    --section-gap: 160px;
 }
 
+/* dark mode - manual toggle via data-theme attribute */
+html[data-theme="dark"] {
+    --bg-primary: #181818;
+    --bg-secondary: #222222;
+    --bg-elevated: #282828;
+    --bg-card: #303134;
+    --bg-hover: #3c4043;
+
+    --text-primary: #e8eaed;
+    --text-secondary: #9aa0a6;
+    --text-tertiary: #70757a;
+    --text-link: #8ab4f8;
+    --text-accent: #81c995;
+
+    --border-color: #5f6368;
+    --border-color-hover: #8e918f;
+    --shadow-color: rgba(0, 0, 0, 0.5);
+    --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3);
+    --shadow-md: 0 1px 6px rgba(0, 0, 0, 0.5);
+    --shadow-lg: 0 4px 12px rgba(0, 0, 0, 0.4);
+
+    --search-bg: #303134;
+    --search-border: #5f6368;
+    --search-border-focus: #8ab4f8;
+
+    --tag-bg: #394457;
+    --tag-text: #8ab4f8;
+
+    --btn-primary-bg: #8ab4f8;
+    --btn-primary-text: #202124;
+    --btn-default-bg: #303134;
+    --btn-default-text: #e8eaed;
+    --btn-default-border: #5f6368;
+
+    --divider: #3c4043;
+    --scrollbar-thumb: #5f6368;
+
+    --color-background: var(--vt-c-black);
+    --color-background-soft: var(--vt-c-black-soft);
+    --color-background-mute: var(--vt-c-black-mute);
+    --color-border: var(--vt-c-divider-dark-2);
+    --color-border-hover: var(--vt-c-divider-dark-1);
+    --color-heading: var(--vt-c-text-dark-1);
+    --color-text: var(--vt-c-text-dark-2);
+}
+
+/* dark mode - auto follow system (only when no manual data-theme is set) */
 @media (prefers-color-scheme: dark) {
-    :root {
+    html:not([data-theme]) {
+        --bg-primary: #181818;
+        --bg-secondary: #222222;
+        --bg-elevated: #282828;
+        --bg-card: #303134;
+        --bg-hover: #3c4043;
+
+        --text-primary: #e8eaed;
+        --text-secondary: #9aa0a6;
+        --text-tertiary: #70757a;
+        --text-link: #8ab4f8;
+        --text-accent: #81c995;
+
+        --border-color: #5f6368;
+        --border-color-hover: #8e918f;
+        --shadow-color: rgba(0, 0, 0, 0.5);
+        --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3);
+        --shadow-md: 0 1px 6px rgba(0, 0, 0, 0.5);
+        --shadow-lg: 0 4px 12px rgba(0, 0, 0, 0.4);
+
+        --search-bg: #303134;
+        --search-border: #5f6368;
+        --search-border-focus: #8ab4f8;
+
+        --tag-bg: #394457;
+        --tag-text: #8ab4f8;
+
+        --btn-primary-bg: #8ab4f8;
+        --btn-primary-text: #202124;
+        --btn-default-bg: #303134;
+        --btn-default-text: #e8eaed;
+        --btn-default-border: #5f6368;
+
+        --divider: #3c4043;
+        --scrollbar-thumb: #5f6368;
+
         --color-background: var(--vt-c-black);
         --color-background-soft: var(--vt-c-black-soft);
         --color-background-mute: var(--vt-c-black-mute);
-
         --color-border: var(--vt-c-divider-dark-2);
         --color-border-hover: var(--vt-c-divider-dark-1);
-
         --color-heading: var(--vt-c-text-dark-1);
         --color-text: var(--vt-c-text-dark-2);
     }
@@ -60,11 +171,11 @@
 
 body {
     min-height: 100vh;
-    color: var(--color-text);
-    background: var(--color-background);
+    color: var(--text-primary);
+    background: var(--bg-primary);
     transition:
-        color 0.5s,
-        background-color 0.5s;
+        color 0.3s ease,
+        background-color 0.3s ease;
     line-height: 1.6;
     font-family:
         Inter,
@@ -90,4 +201,61 @@ input {
     outline: none;
     margin: 0;
     padding: 0;
+}
+
+/* thin overlay scrollbar */
+* {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(0, 0, 0, 0.15) transparent;
+}
+html[data-theme="dark"] * {
+    scrollbar-color: rgba(255, 255, 255, 0.15) transparent;
+}
+@media (prefers-color-scheme: dark) {
+    html:not([data-theme]) * {
+        scrollbar-color: rgba(255, 255, 255, 0.15) transparent;
+    }
+}
+
+::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.15);
+    border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+    background: rgba(0, 0, 0, 0.3);
+}
+html[data-theme="dark"] ::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.15);
+}
+html[data-theme="dark"] ::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.3);
+}
+@media (prefers-color-scheme: dark) {
+    html:not([data-theme]) ::-webkit-scrollbar-thumb {
+        background: rgba(255, 255, 255, 0.15);
+    }
+    html:not([data-theme]) ::-webkit-scrollbar-thumb:hover {
+        background: rgba(255, 255, 255, 0.3);
+    }
+}
+
+/* Hide danmuku external control bar on mobile — too cramped */
+@media screen and (max-width: 768px) {
+    .art-video-player > .artplayer-plugin-danmuku {
+        display: none !important;
+    }
+    .art-video-player:has(> .artplayer-plugin-danmuku) {
+        margin-bottom: 0 !important;
+    }
+    /* Hide web-fullscreen on mobile to prevent control bar overflow */
+    .art-control-fullscreenWeb {
+        display: none !important;
+    }
 }
