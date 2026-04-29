@@ -32,3 +32,5 @@ coverage
 
 .history
 .codebuddy
+.playwright-mcp
+generated-images
