@@ -253,6 +253,16 @@ function onClickRecord(record: { vodId: string; vodName: string; currentEpisode:
 
 /* Mobile */
 @media screen and (max-width: 768px) {
+    .history-btn {
+        width: 28px;
+        height: 28px;
+
+        svg {
+            width: 16px;
+            height: 16px;
+        }
+    }
+
     .history-popover {
         width: calc(100vw - 24px);
         right: -12px;

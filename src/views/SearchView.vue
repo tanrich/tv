@@ -427,15 +427,31 @@ const goHome = () => {
     /* Mobile responsive */
     @media screen and (max-width: 768px) {
         .header {
-            padding: 8px 12px;
+            padding: 6px 10px;
+            gap: 6px;
 
             .header-logo {
-                font-size: 20px;
+                font-size: 18px;
+            }
+
+            .header-search {
+                margin: 0;
+                min-width: 0;
+            }
+
+            .theme-toggle {
+                width: 28px;
+                height: 28px;
+
+                svg {
+                    width: 16px;
+                    height: 16px;
+                }
             }
         }
 
         .container {
-            padding: 64px 12px 20px;
+            padding: 56px 12px 20px;
             flex-direction: column;
 
             .list-wrapper {

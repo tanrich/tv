@@ -174,6 +174,7 @@ const onBlur = () => {
         height: 40px;
         border-radius: 20px;
         max-width: none;
+        padding: 0 16px;
 
         .search-icon-left {
             width: 16px;
@@ -185,13 +186,7 @@ const onBlur = () => {
         }
 
         .search-btn {
-            width: 32px;
-            height: 32px;
-
-            svg {
-                width: 16px;
-                height: 16px;
-            }
+            display: none;
         }
     }
 
@@ -322,6 +317,24 @@ const onBlur = () => {
                 .item-remarks {
                     color: var(--text-secondary);
                 }
+            }
+        }
+    }
+
+    @media screen and (max-width: 768px) {
+        &.compact {
+            height: 36px;
+            border-radius: 18px;
+            padding: 0 12px;
+
+            .search-icon-left {
+                width: 14px;
+                height: 14px;
+                margin-right: 6px;
+            }
+
+            .search-btn {
+                display: none;
             }
         }
     }
