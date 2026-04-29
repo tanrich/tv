@@ -30,6 +30,6 @@ app.use(
     }),
 );
 
-app.listen(8001, () => {
-    console.log('Proxy server is running on port 8001');
+app.listen(5173, () => {
+    console.log('Proxy server is running on port 5173');
 });
