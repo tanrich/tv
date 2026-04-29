@@ -164,7 +164,7 @@ const goHome = () => {
 <template>
     <div class="search-view">
         <div class="header">
-            <h1 class="header-logo" @click="goHome">TV</h1>
+            <h1 class="header-logo" @click="goHome">richBox</h1>
             <div class="header-search">
                 <SearchComponent :text="wd" compact @submit="updateQuery" />
             </div>
@@ -268,7 +268,7 @@ const goHome = () => {
             flex-shrink: 0;
             font-size: 26px;
             font-weight: 800;
-            letter-spacing: -1px;
+            letter-spacing: 0px;
             font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif;
             background: linear-gradient(135deg, #1a1a2e 0%, #16213e 40%, #0f3460 70%, #533483 100%);
             -webkit-background-clip: text;

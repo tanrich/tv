@@ -63,6 +63,9 @@ function initArtplayer(src: string, danmuku: IArtplayerDanmuku[] = []) {
         setting: true,
         flip: true,
         aspectRatio: true,
+        autoOrientation: true,
+        lock: true,
+        fastForward: true,
         theme: '#4285F4',
         settings: [
             {
@@ -356,11 +359,38 @@ onBeforeUnmount(() => {
 
     .video-wrapper {
         position: relative;
+        container-type: inline-size;
 
         .art-player {
             width: 100%;
             aspect-ratio: 16 / 9;
         }
+    }
+}
+
+/* 基于播放器容器宽度自适应隐藏控制栏按钮 */
+/* < 500px: 隐藏网页全屏、宽高比 */
+@container (max-width: 500px) {
+    .art-player :deep(.art-control-fullscreenWeb),
+    .art-player :deep(.art-control-aspectRatio) {
+        display: none !important;
+    }
+    .art-player :deep(.art-control-time) {
+        font-size: 11px !important;
+    }
+}
+
+/* < 400px: 额外隐藏画中画 */
+@container (max-width: 400px) {
+    .art-player :deep(.art-control-pip) {
+        display: none !important;
+    }
+}
+
+/* < 320px: 额外隐藏翻转，只保留播放/音量/进度/设置/全屏 */
+@container (max-width: 320px) {
+    .art-player :deep(.art-control-flip) {
+        display: none !important;
     }
 }
 

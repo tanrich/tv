@@ -30,7 +30,7 @@ const goToSearchDetail = (keyword: string) => {
         </div>
 
         <div class="search-container">
-            <h1 class="logo">TV</h1>
+            <h1 class="logo">richBox</h1>
             <SearchComponent @submit="goToSearchDetail" />
         </div>
 
@@ -97,7 +97,7 @@ const goToSearchDetail = (keyword: string) => {
 .logo {
     font-size: 88px;
     font-weight: 800;
-    letter-spacing: -4px;
+    letter-spacing: 0px;
     margin-bottom: 36px;
     font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif;
     background: linear-gradient(135deg, #1a1a2e 0%, #16213e 40%, #0f3460 70%, #533483 100%);

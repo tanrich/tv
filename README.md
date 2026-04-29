@@ -1,10 +1,6 @@
-# TV - 在线影视搜索播放器
+# richBox - 在线影视搜索播放器
 
 基于 Vue 3 + TypeScript + Vite 构建的在线影视搜索与播放应用，支持影视搜索、详情查看、在线播放及弹幕功能。
-
-<!-- TODO: 添加首页截图 -->
-<!-- TODO: 添加搜索结果页截图 -->
-<!-- TODO: 添加暗黑模式截图 -->
 
 ## 功能特性
 
@@ -12,6 +8,7 @@
 -   **详情查看**：封面、导演、主演、类型、语言、地区、剧情简介等完整信息展示
 -   **在线播放**：支持 m3u8 (HLS) 格式视频在线播放，基于 ArtPlayer 现代化播放器
 -   **弹幕功能**：集成 artplayer-plugin-danmuku 弹幕插件，通过 danmu_api 服务自动匹配影视弹幕数据
+-   **PWA 支持**：支持添加到桌面，移动端自动弹出安装引导横幅（Android 一键安装，iOS 操作引导）
 -   **暗黑模式**：支持亮色/暗黑主题切换，默认跟随系统设置，支持手动一键切换
 -   **响应式布局**：全范围自适应（手机/平板/PC），移动端采用列表与详情切换模式
 -   **WAF 验证处理**：当 API 触发人机验证时，提供验证页面交互
@@ -36,7 +33,8 @@ tv/
 │   │   ├── index.ts              # 影视搜索/详情 API
 │   │   └── danmaku.ts            # 弹幕 API 封装
 │   ├── composables/
-│   │   └── useTheme.ts           # 主题切换 composable
+│   │   ├── useTheme.ts           # 主题切换 composable
+│   │   └── usePWAInstall.ts      # PWA 安装引导逻辑
 │   ├── common/
 │   │   └── util.ts               # 工具函数
 │   ├── assets/
@@ -47,7 +45,8 @@ tv/
 │   │   └── SearchView.vue        # 搜索结果页（列表 + 详情）
 │   ├── components/
 │   │   ├── SearchComponent.vue   # 搜索框组件
-│   │   └── DetailView.vue        # 影视详情 + 播放器 + 弹幕
+│   │   ├── DetailView.vue        # 影视详情 + 播放器 + 弹幕
+│   │   └── PwaInstallBanner.vue  # PWA 安装引导横幅
 │   ├── router/index.ts           # 路由配置
 │   ├── App.vue
 │   └── main.ts
