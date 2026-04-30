@@ -4,6 +4,14 @@ All notable changes to **richBox** will be documented in this file.
 
 ## [Unreleased]
 
+## [0.4.2] - 2026-04-30
+
+### Improvements
+
+- **PWA 横幅文案优化**: 标题改为「添加到桌面，沉浸式观影」，副文案精简；关闭时弹出确认「是否不再提示？」，支持永久关闭 (`PwaInstallBanner.vue`, `usePWAInstall.ts`)
+- **PWA 横幅自动关闭**: 横幅显示 5 秒后自动消失，减少打扰 (`usePWAInstall.ts`)
+- **按钮风格统一**: PWA 横幅按钮改用主站 CSS 变量，亮暗色主题自动适配 (`PwaInstallBanner.vue`)
+
 ## [0.4.1] - 2026-04-30
 
 ### Features

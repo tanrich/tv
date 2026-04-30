@@ -6,9 +6,12 @@ interface BeforeInstallPromptEvent extends Event {
 }
 
 const DISMISS_KEY = 'pwa-install-dismissed';
+const DISMISS_FOREVER_KEY = 'pwa-install-never';
 const DISMISS_DAYS = 7;
+const AUTO_CLOSE_MS = 5000;
 
 function isDismissed(): boolean {
+    if (localStorage.getItem(DISMISS_FOREVER_KEY) === '1') return true;
     const raw = localStorage.getItem(DISMISS_KEY);
     if (!raw) return false;
     const ts = Number(raw);
@@ -43,6 +46,7 @@ export function usePWAInstall() {
     const inApp = ref<InAppBrowser>(false);
     let deferredPrompt: BeforeInstallPromptEvent | null = null;
     let delayTimer: ReturnType<typeof setTimeout> | null = null;
+    let autoCloseTimer: ReturnType<typeof setTimeout> | null = null;
 
     const onBeforeInstallPrompt = (e: Event) => {
         e.preventDefault();
@@ -54,6 +58,10 @@ export function usePWAInstall() {
         if (isStandalone() || isDismissed()) return;
         delayTimer = setTimeout(() => {
             showBanner.value = true;
+            // 5秒后自动关闭
+            autoCloseTimer = setTimeout(() => {
+                if (showBanner.value) dismiss();
+            }, AUTO_CLOSE_MS);
         }, 3000);
     }
 
@@ -69,7 +77,21 @@ export function usePWAInstall() {
 
     function dismiss() {
         showBanner.value = false;
+        if (autoCloseTimer) clearTimeout(autoCloseTimer);
         localStorage.setItem(DISMISS_KEY, String(Date.now()));
+    }
+
+    function dismissForever() {
+        showBanner.value = false;
+        if (autoCloseTimer) clearTimeout(autoCloseTimer);
+        localStorage.setItem(DISMISS_FOREVER_KEY, '1');
+    }
+
+    function cancelAutoClose() {
+        if (autoCloseTimer) {
+            clearTimeout(autoCloseTimer);
+            autoCloseTimer = null;
+        }
     }
 
     onMounted(() => {
@@ -92,7 +114,8 @@ export function usePWAInstall() {
     onUnmounted(() => {
         window.removeEventListener('beforeinstallprompt', onBeforeInstallPrompt);
         if (delayTimer) clearTimeout(delayTimer);
+        if (autoCloseTimer) clearTimeout(autoCloseTimer);
     });
 
-    return { showBanner, isIOS, inApp, install, dismiss };
+    return { showBanner, isIOS, inApp, install, dismiss, dismissForever, cancelAutoClose };
 }
