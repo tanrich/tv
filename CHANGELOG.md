@@ -4,6 +4,16 @@ All notable changes to **richBox** will be documented in this file.
 
 ## [Unreleased]
 
+## [0.3.1] - 2026-04-30
+
+### Bug Fixes
+
+- **搜索下拉选项**: 点击搜索提示框下拉选项后直接展示搜索结果，修复 keyword 相同时不触发搜索的问题 (`SearchView.vue`)
+- **搜索框样式优化**: 去掉左侧搜索 icon，右侧搜索按钮改为填充高亮反色样式，提升可点击感知；首页和搜索页 compact 模式同步修改 (`SearchComponent.vue`)
+- **搜索结果位置**: 修复移动端只有一项搜索结果时显示在页面中间的问题 (`SearchView.vue`)
+- **图标大小对齐**: 统一主题切换和历史记录图标的视觉大小，时钟图标增加 2px 补偿线条型图标的视觉差异，PC/Mobile 四种场景均对齐 (`HistoryPanel.vue`, `SearchView.vue`)
+- **历史面板点击切换**: 支持点击历史记录图标打开/关闭面板，解决 hover 和 click 交互竞争问题 (`HistoryPanel.vue`)
+
 ## [0.3.0] - 2026-04-29
 
 ### Features

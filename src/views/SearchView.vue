@@ -101,7 +101,12 @@ const updateList = async (page?: number) => {
     });
 };
 const updateQuery = (keyword: string) => {
-    router.replace({ query: { keyword, vodId: route.query.vodId } });
+    if (keyword === wd.value) {
+        // keyword unchanged — watch won't fire, force search
+        updateList();
+    } else {
+        router.replace({ query: { keyword, vodId: route.query.vodId } });
+    }
 };
 const detailViewRef = ref<InstanceType<typeof DetailView>>();
 const detailWrapperRef = ref<HTMLElement>();
@@ -308,6 +313,16 @@ const goHome = () => {
                 background: var(--bg-hover);
             }
         }
+
+        .history-btn {
+            width: 36px;
+            height: 36px;
+
+            svg {
+                width: 22px;
+                height: 22px;
+            }
+        }
     }
 
     .exception {
@@ -448,11 +463,22 @@ const goHome = () => {
                     height: 16px;
                 }
             }
+
+            .history-btn {
+                width: 28px;
+                height: 28px;
+
+                svg {
+                    width: 18px;
+                    height: 18px;
+                }
+            }
         }
 
         .container {
             padding: 56px 12px 20px;
             flex-direction: column;
+            justify-content: flex-start;
 
             .list-wrapper {
                 flex: none;

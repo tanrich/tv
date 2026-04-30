@@ -98,9 +98,6 @@ const onBlur = () => {
 
 <template>
     <div class="search-input-wrapper" :class="{ compact }">
-        <svg class="search-icon-left" viewBox="0 0 24 24" fill="none">
-            <path d="M21 21L16.65 16.65M19 11C19 15.4183 15.4183 19 11 19C6.58172 19 3 15.4183 3 11C3 6.58172 6.58172 3 11 3C15.4183 3 19 6.58172 19 11Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-        </svg>
         <input
             class="search-input"
             type="text"
@@ -156,7 +153,7 @@ const onBlur = () => {
     align-items: center;
     border: 1px solid var(--search-border);
     border-radius: 24px;
-    padding: 0 8px 0 16px;
+    padding: 0 6px 0 20px;
     background: var(--search-bg);
     transition: box-shadow 0.2s ease, border-color 0.2s ease;
 
@@ -174,28 +171,21 @@ const onBlur = () => {
         height: 40px;
         border-radius: 20px;
         max-width: none;
-        padding: 0 16px;
-
-        .search-icon-left {
-            width: 16px;
-            height: 16px;
-        }
+        padding: 0 4px 0 16px;
 
         .search-input {
             font-size: 14px;
         }
 
         .search-btn {
-            display: none;
-        }
-    }
+            width: 32px;
+            height: 32px;
 
-    .search-icon-left {
-        flex-shrink: 0;
-        width: 20px;
-        height: 20px;
-        color: var(--text-secondary);
-        margin-right: 12px;
+            svg {
+                width: 16px;
+                height: 16px;
+            }
+        }
     }
 
     .search-input {
@@ -222,19 +212,22 @@ const onBlur = () => {
         height: 36px;
         border: none;
         border-radius: 50%;
-        background: transparent;
-        color: var(--btn-primary-bg);
+        background: var(--btn-primary-bg);
+        color: var(--btn-primary-text, #fff);
         cursor: pointer;
-        transition: background-color 0.15s ease;
-        margin-left: 4px;
+        transition: opacity 0.15s ease;
 
         svg {
-            width: 20px;
-            height: 20px;
+            width: 18px;
+            height: 18px;
         }
 
         &:hover {
-            background: var(--bg-hover);
+            opacity: 0.85;
+        }
+
+        &:active {
+            opacity: 0.7;
         }
     }
 
@@ -325,16 +318,16 @@ const onBlur = () => {
         &.compact {
             height: 36px;
             border-radius: 18px;
-            padding: 0 12px;
-
-            .search-icon-left {
-                width: 14px;
-                height: 14px;
-                margin-right: 6px;
-            }
+            padding: 0 3px 0 12px;
 
             .search-btn {
-                display: none;
+                width: 30px;
+                height: 30px;
+
+                svg {
+                    width: 14px;
+                    height: 14px;
+                }
             }
         }
     }

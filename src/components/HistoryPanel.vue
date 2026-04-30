@@ -7,31 +7,44 @@ const { groupedRecords, loadRecords } = useHistory();
 const router = useRouter();
 const visible = ref(false);
 let hideTimer: ReturnType<typeof setTimeout> | null = null;
+let showTimer: ReturnType<typeof setTimeout> | null = null;
 
-function clearHideTimer() {
-    if (hideTimer) {
-        clearTimeout(hideTimer);
-        hideTimer = null;
-    }
+function clearTimers() {
+    if (hideTimer) { clearTimeout(hideTimer); hideTimer = null; }
+    if (showTimer) { clearTimeout(showTimer); showTimer = null; }
 }
 
 function show() {
-    clearHideTimer();
-    if (!visible.value) {
+    if (hideTimer) { clearTimeout(hideTimer); hideTimer = null; }
+    if (showTimer) return; // already scheduled
+    showTimer = setTimeout(() => {
+        showTimer = null;
+        if (!visible.value) {
+            visible.value = true;
+            loadRecords();
+        }
+    }, 80);
+}
+
+function toggle() {
+    clearTimers();
+    if (visible.value) {
+        visible.value = false;
+    } else {
         visible.value = true;
         loadRecords();
     }
 }
 
 function scheduleHide() {
-    clearHideTimer();
+    clearTimers();
     hideTimer = setTimeout(() => {
         visible.value = false;
     }, 200);
 }
 
 function close() {
-    clearHideTimer();
+    clearTimers();
     visible.value = false;
 }
 
@@ -51,7 +64,7 @@ function onClickRecord(record: { vodId: string; vodName: string; currentEpisode:
 
 <template>
     <div class="history-panel-wrapper" @mouseenter="show" @mouseleave="scheduleHide">
-        <button class="history-btn" aria-label="播放历史">
+        <button class="history-btn" @click="toggle" aria-label="播放历史">
             <svg viewBox="0 0 24 24" fill="none">
                 <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2"/>
                 <path d="M12 7v5l3 3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
@@ -104,8 +117,8 @@ function onClickRecord(record: { vodId: string; vodName: string; currentEpisode:
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 36px;
-    height: 36px;
+    width: 40px;
+    height: 40px;
     border: none;
     border-radius: 50%;
     background: transparent;
@@ -114,8 +127,8 @@ function onClickRecord(record: { vodId: string; vodName: string; currentEpisode:
     transition: background-color 0.15s ease;
 
     svg {
-        width: 20px;
-        height: 20px;
+        width: 24px;
+        height: 24px;
     }
 
     &:hover {
@@ -253,16 +266,6 @@ function onClickRecord(record: { vodId: string; vodName: string; currentEpisode:
 
 /* Mobile */
 @media screen and (max-width: 768px) {
-    .history-btn {
-        width: 28px;
-        height: 28px;
-
-        svg {
-            width: 16px;
-            height: 16px;
-        }
-    }
-
     .history-popover {
         width: calc(100vw - 24px);
         right: -12px;
