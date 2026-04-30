@@ -33,7 +33,7 @@ const autoIFrame = ref();
 const isShowAuthValidate = ref(false);
 
 // Mobile detection
-const isMobile = ref(false);
+const isMobile = ref(typeof window !== 'undefined' && window.matchMedia('(max-width: 768px)').matches);
 const showDetail = ref(false);
 let mql: MediaQueryList | null = null;
 const handleMqlChange = (e: MediaQueryListEvent | MediaQueryList) => {
@@ -53,6 +53,10 @@ onBeforeUnmount(() => {
     mql?.removeEventListener('change', handleMqlChange as (e: MediaQueryListEvent) => void);
 });
 
+// If restoring detail from URL, start in detail mode to avoid flicker
+const initVodId = route.query.vodId?.toString();
+const isRestoringDetail = ref(!!initVodId);
+
 onBeforeMount(() => {
     watch(
         () => route.query.keyword,
@@ -63,11 +67,13 @@ onBeforeMount(() => {
         { immediate: true },
     );
     // Restore detail from query on page load
-    const vodId = route.query.vodId?.toString();
-    if (vodId) {
+    if (initVodId) {
+        if (isMobile.value) showDetail.value = true;
         const ep = route.query.ep !== undefined ? parseInt(route.query.ep as string) : undefined;
         const seek = route.query.seek !== undefined ? parseInt(route.query.seek as string) : undefined;
-        updateDetail(vodId, ep, seek);
+        updateDetail(initVodId, ep, seek).finally(() => {
+            isRestoringDetail.value = false;
+        });
     }
 });
 
@@ -184,7 +190,7 @@ const goHome = () => {
             </button>
             <HistoryPanel />
         </div>
-        <div class="container" v-show="data.pageData.total">
+        <div class="container" v-show="data.pageData.total || isRestoringDetail">
             <div
                 ref="listWrapperRef"
                 :class="{ 'list-wrapper': true, 'min-list-wrapper': isShowDetailPage }"

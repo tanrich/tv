@@ -254,8 +254,4 @@ html[data-theme="dark"] ::-webkit-scrollbar-thumb:hover {
     .art-video-player:has(> .artplayer-plugin-danmuku) {
         margin-bottom: 0 !important;
     }
-    /* Hide web-fullscreen on mobile to prevent control bar overflow */
-    .art-control-fullscreenWeb {
-        display: none !important;
-    }
 }

@@ -4,6 +4,22 @@ All notable changes to **richBox** will be documented in this file.
 
 ## [Unreleased]
 
+## [0.4.1] - 2026-04-30
+
+### Features
+
+- **连续播放**: 播放器设置新增「连续播放」开关，默认开启，播完自动播放下一集，状态持久化到 localStorage (`DetailView.vue`)
+- **预加载第1集**: 进入详情页自动预加载第1集视频，不自动播放，减少用户等待时间 (`DetailView.vue`)
+
+### Bug Fixes
+
+- **播放器 autoSize 修复**: 关闭 ArtPlayer autoSize，修复 4:3 老片控制栏被截断的问题 (`DetailView.vue`)
+- **移动端播放器全宽**: 播放器用负 margin 突破 Card 内边距，占满屏幕宽度 (`DetailView.vue`)
+- **switchUrl 异步修复**: `await art.switchUrl(src)` 等加载完成再播放，避免异步竞争 (`DetailView.vue`)
+- **刷新详情页防抖动**: `isMobile` 同步初始化 + URL 有 vodId 时立即显示详情面板，避免先闪列表再切详情 (`SearchView.vue`)
+- **iOS 全屏适配**: 移除移动端对 fullscreenWeb 按钮的 CSS 隐藏，iOS/安卓均可使用网页全屏和原生全屏 (`base.css`, `DetailView.vue`)
+- **全屏标题栏样式**: fs-header 样式从 scoped 移至全局，修复全屏 DOM 提升后样式失效导致标题栏错乱 (`DetailView.vue`)
+
 ## [0.4.0] - 2026-04-30
 
 ### Features

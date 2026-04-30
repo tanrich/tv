@@ -16,6 +16,7 @@ let art: Artplayer | null = null;
 const videoData = reactive<{ src: string }>({ src: '' });
 let currentEpisodeIndex = -1;
 let lastSaveTime = 0;
+let autoNext = localStorage.getItem('auto-next') !== 'false'; // default on
 
 // Danmaku state
 let cachedEpisodes: IEpisodeInfo[] = [];
@@ -54,7 +55,7 @@ function initArtplayer(src: string, danmuku: IArtplayerDanmuku[] = []) {
         url: src,
         type: 'm3u8',
         customType: { m3u8: playM3u8 },
-        autoSize: true,
+        autoSize: false,
         fullscreen: true,
         fullscreenWeb: true,
         pip: true,
@@ -85,6 +86,19 @@ function initArtplayer(src: string, danmuku: IArtplayerDanmuku[] = []) {
             },
         ],
         settings: [
+            {
+                html: '连续播放',
+                icon: '<svg viewBox="0 0 24 24" width="22" height="22"><path d="M17 1l4 4-4 4" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="M3 11V9a4 4 0 0 1 4-4h14" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="M7 23l-4-4 4-4" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="M21 13v2a4 4 0 0 1-4 4H3" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+                tooltip: autoNext ? '开启' : '关闭',
+                switch: autoNext,
+                onSwitch(item: any) {
+                    const next = !item.switch;
+                    autoNext = next;
+                    localStorage.setItem('auto-next', String(next));
+                    item.tooltip = next ? '开启' : '关闭';
+                    return next;
+                },
+            },
             {
                 html: '弹幕',
                 icon: '<svg viewBox="0 0 1024 1024" width="22" height="22"><path d="M874.7 198H149.3C114.4 198 86 226.4 86 261.3v501.4c0 34.9 28.4 63.3 63.3 63.3h725.4c34.9 0 63.3-28.4 63.3-63.3V261.3c0-34.9-28.4-63.3-63.3-63.3zM320 420h-96c-17.7 0-32-14.3-32-32s14.3-32 32-32h96c17.7 0 32 14.3 32 32s-14.3 32-32 32zm224 0H416c-17.7 0-32-14.3-32-32s14.3-32 32-32h128c17.7 0 32 14.3 32 32s-14.3 32-32 32zm256 192H480c-17.7 0-32-14.3-32-32s14.3-32 32-32h320c17.7 0 32 14.3 32 32s-14.3 32-32 32zm0-192H672c-17.7 0-32-14.3-32-32s14.3-32 32-32h128c17.7 0 32 14.3 32 32s-14.3 32-32 32z" fill="currentColor"/></svg>',
@@ -120,6 +134,16 @@ function initArtplayer(src: string, danmuku: IArtplayerDanmuku[] = []) {
         flushProgress();
     });
     art.on('video:pause', () => flushProgress());
+
+    // Auto-play next episode
+    art.on('video:ended', () => {
+        if (!autoNext || !art) return;
+        const urls = props.data.vod_play_url_parse;
+        const nextIndex = currentEpisodeIndex + 1;
+        if (nextIndex < urls.length) {
+            playVideo(urls[nextIndex], nextIndex);
+        }
+    });
 
     // Fullscreen header toolbar — visibility controlled by CSS
     const headerLayer = art.layers['fullscreenHeader'];
@@ -177,16 +201,16 @@ const loadDanmaku = async (episodeIndex: number) => {
     return transformToArtplayerDanmuku(comments);
 };
 
-const playVideo = async (src: string, index: number, seekTime?: number) => {
+const playVideo = async (src: string, index: number, seekTime?: number, autoPlay = true) => {
     currentEpisodeIndex = index;
-    // Immediately init player & start playback — no waiting for danmaku
+    // Immediately init player — no waiting for danmaku
     if (!art) {
         initArtplayer(src);
     } else {
-        art.switchUrl(src);
+        await art.switchUrl(src);
     }
     videoData.src = src;
-    art?.play();
+    if (autoPlay) art?.play();
 
     // Seek to saved position if provided
     if (seekTime && seekTime > 0 && art) {
@@ -229,6 +253,12 @@ const fetchDanmaku = async () => {
     cachedEpisodes = [];
     danmakuTotal.value = 0;
     if (!d.vod_name) return;
+
+    // Auto-load first episode without playing
+    const urls = d.vod_play_url_parse;
+    if (urls?.length) {
+        playVideo(urls[0], 0, undefined, false);
+    }
 
     danmakuLoading.value = true;
     let resolveDanmaku: () => void;
@@ -404,55 +434,12 @@ onBeforeUnmount(() => {
             aspect-ratio: 16 / 9;
         }
 
-        :deep(.fs-header) {
-            display: flex;
-            align-items: center;
-            padding: 14px 16px;
-            padding-top: max(14px, env(safe-area-inset-top));
-            background: linear-gradient(to bottom, rgba(0, 0, 0, 0.5) 0%, rgba(0, 0, 0, 0.15) 70%, transparent 100%);
-            color: #fff;
-            min-height: 48px;
-
-            .fs-back-btn {
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                width: 44px;
-                height: 44px;
-                margin: -10px;
-                margin-right: -4px;
-                border: none;
-                border-radius: 50%;
-                background: transparent;
-                color: #fff;
-                font-size: 22px;
-                font-weight: 300;
-                cursor: pointer;
-                flex-shrink: 0;
-                -webkit-tap-highlight-color: transparent;
-
-                &:active {
-                    background: rgba(255, 255, 255, 0.12);
-                }
-            }
-
-            .fs-title {
-                margin-left: 4px;
-                font-size: 16px;
-                font-weight: 500;
-                overflow: hidden;
-                text-overflow: ellipsis;
-                white-space: nowrap;
-                text-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
-            }
-        }
     }
 }
 
 /* 基于播放器容器宽度自适应隐藏控制栏按钮 */
-/* < 500px: 隐藏网页全屏、宽高比 */
+/* < 500px: 隐藏宽高比（保留全屏按钮作为移动端唯一入口） */
 @container (max-width: 500px) {
-    .art-player :deep(.art-control-fullscreenWeb),
     .art-player :deep(.art-control-aspectRatio) {
         display: none !important;
     }
@@ -494,6 +481,16 @@ onBeforeUnmount(() => {
                 width: 100%;
             }
         }
+
+        .video-wrapper {
+            margin-left: -16px;
+            margin-right: -16px;
+            width: calc(100% + 32px);
+
+            .art-player {
+                border-radius: 0;
+            }
+        }
     }
 }
 </style>
@@ -522,5 +519,49 @@ onBeforeUnmount(() => {
     padding-bottom: max(10px, env(safe-area-inset-bottom)) !important;
     padding-left: max(16px, env(safe-area-inset-left)) !important;
     padding-right: max(16px, env(safe-area-inset-right)) !important;
+}
+
+/* Fullscreen header bar (must be global — DOM hoisted to body in fullscreen) */
+.fs-header {
+    display: flex;
+    align-items: center;
+    padding: 14px 16px;
+    padding-top: max(14px, env(safe-area-inset-top));
+    background: linear-gradient(to bottom, rgba(0, 0, 0, 0.5) 0%, rgba(0, 0, 0, 0.15) 70%, transparent 100%);
+    color: #fff;
+    min-height: 48px;
+
+    .fs-back-btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 44px;
+        height: 44px;
+        margin: -10px;
+        margin-right: -4px;
+        border: none;
+        border-radius: 50%;
+        background: transparent;
+        color: #fff;
+        font-size: 22px;
+        font-weight: 300;
+        cursor: pointer;
+        flex-shrink: 0;
+        -webkit-tap-highlight-color: transparent;
+
+        &:active {
+            background: rgba(255, 255, 255, 0.12);
+        }
+    }
+
+    .fs-title {
+        margin-left: 4px;
+        font-size: 16px;
+        font-weight: 500;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        text-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
+    }
 }
 </style>
