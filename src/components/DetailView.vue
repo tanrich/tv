@@ -4,8 +4,7 @@ import type { IArtplayerDanmuku, IEpisodeInfo, ISearchHint } from '@/api/danmaku
 import Artplayer from 'artplayer';
 import Hls from 'hls.js';
 import artplayerPluginDanmuku from 'artplayer-plugin-danmuku';
-import { onBeforeUnmount, reactive, ref, watch } from 'vue';
-import { Button } from 'view-ui-plus';
+import { computed, onBeforeUnmount, reactive, ref, watch } from 'vue';
 import { searchEpisodes, getComments, transformToArtplayerDanmuku } from '@/api/danmaku';
 import { useHistory } from '@/composables/useHistory';
 
@@ -29,6 +28,29 @@ let fetchVersion = 0;
 const props = defineProps<{
     data: IDetailData;
 }>();
+
+// Episode tab grouping (30 per tab)
+const CHUNK_SIZE = 30;
+const activeTab = ref(0);
+
+const tabs = computed(() => {
+    const total = props.data.vod_play_url_parse?.length || 0;
+    if (total <= CHUNK_SIZE) return [];
+    const result: { label: string; start: number; end: number }[] = [];
+    for (let i = 0; i < total; i += CHUNK_SIZE) {
+        const end = Math.min(i + CHUNK_SIZE, total);
+        result.push({ label: `${i + 1}-${end}`, start: i, end });
+    }
+    return result;
+});
+
+const currentTabEpisodes = computed(() => {
+    const urls = props.data.vod_play_url_parse || [];
+    if (tabs.value.length === 0) return urls.map((url, i) => ({ url, index: i }));
+    const tab = tabs.value[activeTab.value];
+    if (!tab) return [];
+    return urls.slice(tab.start, tab.end).map((url, i) => ({ url, index: tab.start + i }));
+});
 
 function playM3u8(video: HTMLMediaElement, url: string, artInstance: any) {
     if (Hls.isSupported()) {
@@ -203,6 +225,10 @@ const loadDanmaku = async (episodeIndex: number) => {
 
 const playVideo = async (src: string, index: number, seekTime?: number, autoPlay = true) => {
     currentEpisodeIndex = index;
+    // Auto-switch tab to match the episode
+    if (tabs.value.length > 0) {
+        activeTab.value = Math.floor(index / CHUNK_SIZE);
+    }
     // Immediately init player — no waiting for danmaku
     if (!art) {
         initArtplayer(src);
@@ -336,17 +362,22 @@ onBeforeUnmount(() => {
             <div class="content">{{ props.data.vod_content.trim() }}</div>
         </div>
         <div class="play-container">
-            <h3>更新至{{ props.data.vod_play_url_parse.length }}集</h3>
-            <div class="play-btn-wrapper">
-                <Button
-                    v-for="(url, index) in props.data.vod_play_url_parse"
-                    class="play-btn"
-                    :type="videoData.src === url ? 'primary' : 'default'"
-                    :key="url"
-                    size="large"
-                    @click.stop="playVideo(url, index)"
-                    >{{ index + 1 }}</Button
-                >
+            <h3>选集<span class="episode-count">（更新至{{ props.data.vod_play_url_parse.length }}集）</span></h3>
+            <div v-if="tabs.length" class="episode-tabs">
+                <button
+                    v-for="(tab, i) in tabs"
+                    :key="i"
+                    :class="['tab-btn', { active: activeTab === i }]"
+                    @click="activeTab = i"
+                >{{ tab.label }}</button>
+            </div>
+            <div class="episode-grid">
+                <button
+                    v-for="ep in currentTabEpisodes"
+                    :key="ep.index"
+                    :class="['ep-btn', { playing: videoData.src === ep.url }]"
+                    @click.stop="playVideo(ep.url, ep.index)"
+                >{{ ep.index + 1 }}</button>
             </div>
         </div>
         <div class="video-wrapper">
@@ -410,17 +441,73 @@ onBeforeUnmount(() => {
         h3 {
             margin-bottom: 10px;
             color: var(--text-primary);
+
+            .episode-count {
+                font-size: 13px;
+                font-weight: normal;
+                color: var(--text-secondary);
+            }
         }
 
-        .play-btn-wrapper {
+        .episode-tabs {
             display: flex;
-            flex-wrap: wrap;
+            gap: 0;
+            margin-bottom: 12px;
+            border-bottom: 1px solid var(--border-color);
 
-            .play-btn {
-                margin-right: 10px;
-                margin-top: 10px;
-                min-width: 50px;
-                text-align: center;
+            .tab-btn {
+                padding: 6px 16px;
+                border: none;
+                border-bottom: 2px solid transparent;
+                background: none;
+                color: var(--text-tertiary);
+                font-size: 13px;
+                cursor: pointer;
+                transition: all 0.2s ease;
+                white-space: nowrap;
+
+                &:hover {
+                    color: var(--text-primary);
+                }
+
+                &.active {
+                    color: var(--btn-primary-bg);
+                    border-bottom-color: var(--btn-primary-bg);
+                    font-weight: 500;
+                }
+            }
+        }
+
+        .episode-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, 50px);
+            gap: 6px;
+
+            .ep-btn {
+                width: 50px;
+                height: 50px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                border: 1px solid var(--border-color);
+                border-radius: 6px;
+                background: var(--bg-secondary);
+                color: var(--text-primary);
+                font-size: 13px;
+                cursor: pointer;
+                transition: all 0.15s ease;
+
+                &:hover {
+                    border-color: var(--btn-primary-bg);
+                    color: var(--btn-primary-bg);
+                    background: var(--bg-hover);
+                }
+
+                &.playing {
+                    background: var(--btn-primary-bg);
+                    border-color: var(--btn-primary-bg);
+                    color: var(--btn-primary-text);
+                }
             }
         }
     }
@@ -489,6 +576,26 @@ onBeforeUnmount(() => {
 
             .art-player {
                 border-radius: 0;
+            }
+        }
+
+        .play-container {
+            .episode-tabs {
+                .tab-btn {
+                    padding: 5px 12px;
+                    font-size: 12px;
+                }
+            }
+
+            .episode-grid {
+                grid-template-columns: repeat(auto-fill, 44px);
+                gap: 5px;
+
+                .ep-btn {
+                    width: 44px;
+                    height: 44px;
+                    font-size: 12px;
+                }
             }
         }
     }

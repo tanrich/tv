@@ -33,4 +33,6 @@ coverage
 .history
 .codebuddy
 .playwright-mcp
+/*.png
+/*.jpeg
 generated-images

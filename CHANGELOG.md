@@ -4,6 +4,13 @@ All notable changes to **richBox** will be documented in this file.
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-04-30
+
+### Features
+
+- **选集 Tab 分组**: 集数按 30 个一组拆分为 Tab 页签（如 1-30、31-60、61-84），下划线指示器风格；从历史记录跳转时自动高亮到正确的 Tab (`DetailView.vue`)
+- **选集网格布局**: 集数按钮改为固定 50×50px 正方形网格（移动端 44×44px），自动流式排列，替代原有平铺 Button (`DetailView.vue`)
+
 ## [0.4.2] - 2026-04-30
 
 ### Improvements
