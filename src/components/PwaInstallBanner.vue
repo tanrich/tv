@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { usePWAInstall } from '@/composables/usePWAInstall';
 
-const { showBanner, isIOS, install, dismiss } = usePWAInstall();
+const { showBanner, isIOS, inApp, install, dismiss } = usePWAInstall();
 </script>
 
 <template>
@@ -13,8 +13,18 @@ const { showBanner, isIOS, install, dismiss } = usePWAInstall();
                 </div>
                 <div class="pwa-banner__text">
                     <span class="pwa-banner__title">richBox</span>
-                    <span class="pwa-banner__desc" v-if="!isIOS">安装到桌面，体验更流畅</span>
-                    <span class="pwa-banner__desc" v-else>
+                    <!-- 微信/QQ 内置浏览器：引导用系统浏览器打开 -->
+                    <span class="pwa-banner__desc" v-if="inApp">
+                        请点击右上角
+                        <svg class="pwa-banner__more-icon" width="16" height="16" viewBox="0 0 24 24" fill="none">
+                            <circle cx="5" cy="12" r="2" fill="currentColor"/>
+                            <circle cx="12" cy="12" r="2" fill="currentColor"/>
+                            <circle cx="19" cy="12" r="2" fill="currentColor"/>
+                        </svg>
+                        选择「在浏览器中打开」以获得最佳体验
+                    </span>
+                    <!-- iOS Safari：引导添加到主屏幕 -->
+                    <span class="pwa-banner__desc" v-else-if="isIOS">
                         点击
                         <svg class="pwa-banner__share-icon" width="14" height="14" viewBox="0 0 24 24" fill="none">
                             <path d="M12 2L12 16M12 2L7 7M12 2L17 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
@@ -22,8 +32,10 @@ const { showBanner, isIOS, install, dismiss } = usePWAInstall();
                         </svg>
                         然后「添加到主屏幕」
                     </span>
+                    <!-- 正常浏览器：安装 PWA -->
+                    <span class="pwa-banner__desc" v-else>安装到桌面，体验更流畅</span>
                 </div>
-                <button v-if="!isIOS" class="pwa-banner__install" @click="install">
+                <button v-if="!isIOS && !inApp" class="pwa-banner__install" @click="install">
                     安装
                 </button>
                 <button class="pwa-banner__close" @click="dismiss" aria-label="关闭">
@@ -125,6 +137,13 @@ const { showBanner, isIOS, install, dismiss } = usePWAInstall();
         display: inline-block;
         vertical-align: middle;
         color: #4285f4;
+        flex-shrink: 0;
+    }
+
+    &__more-icon {
+        display: inline-block;
+        vertical-align: middle;
+        color: var(--text-primary);
         flex-shrink: 0;
     }
 

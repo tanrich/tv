@@ -28,9 +28,19 @@ function detectIOS(): boolean {
     return /iPad|iPhone|iPod/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
 }
 
+type InAppBrowser = 'wechat' | 'qq' | false;
+
+function detectInApp(): InAppBrowser {
+    const ua = navigator.userAgent.toLowerCase();
+    if (/micromessenger/i.test(ua)) return 'wechat';
+    if (/\bqq\b/i.test(ua) && !/qqbrowser/i.test(ua)) return 'qq';
+    return false;
+}
+
 export function usePWAInstall() {
     const showBanner = ref(false);
     const isIOS = ref(false);
+    const inApp = ref<InAppBrowser>(false);
     let deferredPrompt: BeforeInstallPromptEvent | null = null;
     let delayTimer: ReturnType<typeof setTimeout> | null = null;
 
@@ -66,8 +76,12 @@ export function usePWAInstall() {
         if (isStandalone() || isDismissed()) return;
 
         isIOS.value = detectIOS();
+        inApp.value = detectInApp();
 
-        if (isIOS.value) {
+        if (inApp.value) {
+            // 微信/QQ 内置浏览器，引导用户用系统浏览器打开
+            scheduleShow();
+        } else if (isIOS.value) {
             // iOS 没有 beforeinstallprompt，直接延迟显示引导
             scheduleShow();
         } else {
@@ -80,5 +94,5 @@ export function usePWAInstall() {
         if (delayTimer) clearTimeout(delayTimer);
     });
 
-    return { showBanner, isIOS, install, dismiss };
+    return { showBanner, isIOS, inApp, install, dismiss };
 }

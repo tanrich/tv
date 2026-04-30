@@ -4,6 +4,12 @@ All notable changes to **richBox** will be documented in this file.
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-04-30
+
+### Features
+
+- **微信/QQ 内置浏览器引导**: 检测微信和 QQ 内置浏览器环境，PWA 安装横幅改为引导用户点击右上角用系统浏览器打开 (`usePWAInstall.ts`, `PwaInstallBanner.vue`)
+
 ## [0.3.1] - 2026-04-30
 
 ### Bug Fixes
