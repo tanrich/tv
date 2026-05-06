@@ -17,6 +17,14 @@ let currentEpisodeIndex = -1;
 let lastSaveTime = 0;
 let autoNext = localStorage.getItem('auto-next') !== 'false'; // default on
 
+// Long-press speed playback state
+const SPEED_RATE = 2; // 倍速播放速率
+const LONG_PRESS_DELAY = 500; // 长按触发延迟(ms)
+let isSpeedMode = false;
+let originalRate = 1;
+let longPressTimer: ReturnType<typeof setTimeout> | null = null;
+let keydownActive = false; // 防止 keydown repeat 重复触发
+
 // Danmaku state
 let cachedEpisodes: IEpisodeInfo[] = [];
 const danmakuTotal = ref(0);
@@ -88,9 +96,22 @@ function initArtplayer(src: string, danmuku: IArtplayerDanmuku[] = []) {
         aspectRatio: true,
         autoOrientation: true,
         lock: true,
-        fastForward: true,
+        fastForward: false,
         theme: '#4285F4',
         layers: [
+            {
+                name: 'speedIndicator',
+                html: `<div class="speed-indicator"><svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><polygon points="5,3 19,12 5,21"/></svg><svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><polygon points="5,3 19,12 5,21"/></svg><span class="speed-text">${SPEED_RATE}x 倍速播放中</span></div>`,
+                style: {
+                    position: 'absolute',
+                    top: '12%',
+                    left: '50%',
+                    transform: 'translateX(-50%)',
+                    zIndex: '80',
+                    pointerEvents: 'none',
+                    display: 'none',
+                },
+            },
             {
                 name: 'fullscreenHeader',
                 html: `<div class="fs-header">
@@ -148,6 +169,9 @@ function initArtplayer(src: string, danmuku: IArtplayerDanmuku[] = []) {
         ],
     });
 
+    // Long-press speed playback handlers
+    setupLongPressSpeed();
+
     // Progress tracking: throttled timeupdate + immediate on pause
     art.on('video:timeupdate', () => {
         const now = Date.now();
@@ -168,7 +192,7 @@ function initArtplayer(src: string, danmuku: IArtplayerDanmuku[] = []) {
     });
 
     // Fullscreen header toolbar — visibility controlled by CSS
-    const headerLayer = art.layers['fullscreenHeader'];
+    const headerLayer = art.layers.fullscreenHeader;
     if (headerLayer) {
         const backBtn = headerLayer.querySelector('.fs-back-btn') as HTMLElement;
         const titleEl = headerLayer.querySelector('.fs-title') as HTMLElement;
@@ -187,6 +211,114 @@ function initArtplayer(src: string, danmuku: IArtplayerDanmuku[] = []) {
         art.on('fullscreen', setTitle);
         art.on('fullscreenWeb', setTitle);
     }
+}
+
+// --- Long-press speed playback logic ---
+function enterSpeedMode() {
+    if (isSpeedMode || !art) return;
+    if (art.paused) return; // 暂停状态不触发
+    isSpeedMode = true;
+    originalRate = art.playbackRate;
+    art.playbackRate = SPEED_RATE;
+    // 显示倍速指示器
+    const layer = art.layers.speedIndicator;
+    if (layer) layer.style.display = 'block';
+}
+
+function exitSpeedMode() {
+    if (!isSpeedMode || !art) return;
+    isSpeedMode = false;
+    art.playbackRate = originalRate;
+    // 隐藏倍速指示器
+    const layer = art.layers.speedIndicator;
+    if (layer) layer.style.display = 'none';
+    // 清除定时器
+    if (longPressTimer) {
+        clearTimeout(longPressTimer);
+        longPressTimer = null;
+    }
+}
+
+function setupLongPressSpeed() {
+    if (!art) return;
+    const container = art.template.$player;
+
+    // --- PC: 长按左右方向键 ---
+    const onKeyDown = (e: KeyboardEvent) => {
+        if (!art || art.isInput) return;
+        if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
+        // 倍速模式中，阻止后续 keydown repeat 触发 Artplayer 的快进
+        if (isSpeedMode) {
+            e.preventDefault();
+            e.stopPropagation();
+            return;
+        }
+        if (keydownActive) return; // 防止 repeat
+        keydownActive = true;
+        longPressTimer = setTimeout(() => {
+            enterSpeedMode();
+        }, LONG_PRESS_DELAY);
+    };
+
+    const onKeyUp = (e: KeyboardEvent) => {
+        if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
+        keydownActive = false;
+        if (longPressTimer) {
+            clearTimeout(longPressTimer);
+            longPressTimer = null;
+        }
+        if (isSpeedMode) {
+            exitSpeedMode();
+        }
+    };
+
+    // --- Mobile: 长按触摸屏幕 ---
+    const onTouchStart = (e: TouchEvent) => {
+        if (!art) return;
+        // 排除控制栏区域的触摸
+        const target = e.target as HTMLElement;
+        if (target.closest('.art-bottom') || target.closest('.art-control')) return;
+        longPressTimer = setTimeout(() => {
+            enterSpeedMode();
+        }, LONG_PRESS_DELAY);
+    };
+
+    const onTouchEnd = () => {
+        if (longPressTimer) {
+            clearTimeout(longPressTimer);
+            longPressTimer = null;
+        }
+        if (isSpeedMode) {
+            exitSpeedMode();
+        }
+    };
+
+    const onTouchMove = () => {
+        // 手指移动时取消长按
+        if (longPressTimer) {
+            clearTimeout(longPressTimer);
+            longPressTimer = null;
+        }
+    };
+
+    // 绑定事件（capture 阶段拦截，优先于 Artplayer 的 hotkey）
+    document.addEventListener('keydown', onKeyDown, true);
+    document.addEventListener('keyup', onKeyUp, true);
+    container.addEventListener('touchstart', onTouchStart, { passive: true });
+    container.addEventListener('touchend', onTouchEnd);
+    container.addEventListener('touchcancel', onTouchEnd);
+    container.addEventListener('touchmove', onTouchMove, { passive: true });
+
+    // 播放器销毁时清理
+    art.on('destroy', () => {
+        document.removeEventListener('keydown', onKeyDown, true);
+        document.removeEventListener('keyup', onKeyUp, true);
+        container.removeEventListener('touchstart', onTouchStart);
+        container.removeEventListener('touchend', onTouchEnd);
+        container.removeEventListener('touchcancel', onTouchEnd);
+        container.removeEventListener('touchmove', onTouchMove);
+        exitSpeedMode();
+    });
 }
 
 const resetVideo = () => {
@@ -288,7 +420,9 @@ const fetchDanmaku = async () => {
 
     danmakuLoading.value = true;
     let resolveDanmaku: () => void;
-    danmakuReady = new Promise<void>((r) => { resolveDanmaku = r; });
+    danmakuReady = new Promise<void>((r) => {
+        resolveDanmaku = r;
+    });
     const hint: ISearchHint = {
         name: d.vod_name,
         actor: d.vod_actor,
@@ -362,14 +496,18 @@ onBeforeUnmount(() => {
             <div class="content">{{ props.data.vod_content.trim() }}</div>
         </div>
         <div class="play-container">
-            <h3>选集<span class="episode-count">（更新至{{ props.data.vod_play_url_parse.length }}集）</span></h3>
+            <h3>
+                选集<span class="episode-count">（更新至{{ props.data.vod_play_url_parse.length }}集）</span>
+            </h3>
             <div v-if="tabs.length" class="episode-tabs">
                 <button
                     v-for="(tab, i) in tabs"
                     :key="i"
                     :class="['tab-btn', { active: activeTab === i }]"
                     @click="activeTab = i"
-                >{{ tab.label }}</button>
+                >
+                    {{ tab.label }}
+                </button>
             </div>
             <div class="episode-grid">
                 <button
@@ -377,7 +515,9 @@ onBeforeUnmount(() => {
                     :key="ep.index"
                     :class="['ep-btn', { playing: videoData.src === ep.url }]"
                     @click.stop="playVideo(ep.url, ep.index)"
-                >{{ ep.index + 1 }}</button>
+                >
+                    {{ ep.index + 1 }}
+                </button>
             </div>
         </div>
         <div class="video-wrapper">
@@ -520,7 +660,6 @@ onBeforeUnmount(() => {
             width: 100%;
             aspect-ratio: 16 / 9;
         }
-
     }
 }
 
@@ -669,6 +808,24 @@ onBeforeUnmount(() => {
         text-overflow: ellipsis;
         white-space: nowrap;
         text-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
+    }
+}
+
+/* Speed indicator styles */
+.speed-indicator {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px 16px;
+    background: rgba(0, 0, 0, 0.8);
+    border-radius: 16px;
+    color: #fff;
+    font-size: 14px;
+    font-weight: 500;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
+
+    .speed-text {
+        margin-left: 8px;
     }
 }
 </style>
