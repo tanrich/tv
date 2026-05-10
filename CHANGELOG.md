@@ -4,6 +4,12 @@ All notable changes to **richBox** will be documented in this file.
 
 ## [Unreleased]
 
+## [0.6.1] - 2026-05-10
+
+### Fixes
+
+-   **长按倍速体验优化**: 修复长按方向键时会先触发多次快进跳转再进入倍速的问题；现在 keydown/touchstart 时立即接管事件，短按松手才执行一次 5s 跳转，长按直接进入倍速播放全程无跳转 (`DetailView.vue`)
+
 ## [0.6.0] - 2026-05-06
 
 ### Features

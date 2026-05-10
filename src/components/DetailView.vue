@@ -244,32 +244,41 @@ function setupLongPressSpeed() {
     const container = art.template.$player;
 
     // --- PC: 长按左右方向键 ---
+    let pressedArrowKey: string | null = null;
+
     const onKeyDown = (e: KeyboardEvent) => {
         if (!art || art.isInput) return;
         if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
-        // 倍速模式中，阻止后续 keydown repeat 触发 Artplayer 的快进
-        if (isSpeedMode) {
-            e.preventDefault();
-            e.stopPropagation();
-            return;
-        }
+        // 全程阻止默认行为，由我们决定是跳转还是倍速
+        e.preventDefault();
+        e.stopPropagation();
         if (keydownActive) return; // 防止 repeat
         keydownActive = true;
+        pressedArrowKey = e.key;
         longPressTimer = setTimeout(() => {
+            longPressTimer = null;
             enterSpeedMode();
         }, LONG_PRESS_DELAY);
     };
 
     const onKeyUp = (e: KeyboardEvent) => {
         if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
+        e.preventDefault();
+        e.stopPropagation();
         keydownActive = false;
         if (longPressTimer) {
+            // timer 未触发 = 短按，手动执行一次跳转
             clearTimeout(longPressTimer);
             longPressTimer = null;
+            if (art) {
+                const step = 5; // 与 Artplayer 默认跳转一致
+                art.currentTime += pressedArrowKey === 'ArrowRight' ? step : -step;
+            }
         }
         if (isSpeedMode) {
             exitSpeedMode();
         }
+        pressedArrowKey = null;
     };
 
     // --- Mobile: 长按触摸屏幕 ---
@@ -279,12 +288,14 @@ function setupLongPressSpeed() {
         const target = e.target as HTMLElement;
         if (target.closest('.art-bottom') || target.closest('.art-control')) return;
         longPressTimer = setTimeout(() => {
+            longPressTimer = null;
             enterSpeedMode();
         }, LONG_PRESS_DELAY);
     };
 
     const onTouchEnd = () => {
         if (longPressTimer) {
+            // timer 未触发 = 短触，不做跳转（保留 Artplayer 原有的双击快进逻辑）
             clearTimeout(longPressTimer);
             longPressTimer = null;
         }
