@@ -34,7 +34,7 @@ export default defineConfig({
                 globPatterns: ['**/*.{js,css,html,ico,png,svg,woff,woff2}'],
                 runtimeCaching: [
                     {
-                        urlPattern: /^https:\/\/api\.yzzy-api\.com\/.*/i,
+                        urlPattern: /^https:\/\/api\.yyzy-tv\.vip\/.*/i,
                         handler: 'NetworkFirst',
                         options: { cacheName: 'api-cache', expiration: { maxEntries: 50, maxAgeSeconds: 60 * 60 } },
                     },
@@ -53,18 +53,18 @@ export default defineConfig({
         host: '0.0.0.0',
         proxy: {
             '/inc': {
-                target: 'https://api.yzzy-api.com',
+                target: 'https://api.yyzy-tv.vip',
                 changeOrigin: true,
                 timeout: 1000000,
             },
             '/proxy/WAF': {
-                target: 'https://api.yzzy-api.com',
+                target: 'https://api.yyzy-tv.vip',
                 changeOrigin: true,
                 timeout: 1000000,
                 rewrite: (path) => path.replace(/^\/proxy/, ''),
             },
             '/WAF': {
-                target: 'https://api.yzzy-api.com',
+                target: 'https://api.yyzy-tv.vip',
                 changeOrigin: true,
                 timeout: 1000000,
             },

@@ -4,6 +4,12 @@ All notable changes to **richBox** will be documented in this file.
 
 ## [Unreleased]
 
+## [0.6.2] - 2026-05-16
+
+### Fixes
+
+-   **API 域名迁移**: 将 API 地址从 `api.yzzy-api.com` 迁移至 `api.yyzy-tv.vip`，接口路径从 `api_mac10.php` 改为 `apijson.php`；同步更新 Vite 开发代理、生产代理服务器和 PWA 缓存规则 (`src/api/index.ts`, `vite.config.ts`, `proxy-server.js`)
+
 ## [0.6.1] - 2026-05-10
 
 ### Fixes

@@ -66,7 +66,7 @@ export async function getList(
     wd: string,
     pg?: number,
 ): Promise<IResponseData<IVodItem> & { code: number; redirectHtmlData?: string }> {
-    const res = await axios.get('/inc/api_mac10.php', {
+    const res = await axios.get('/inc/apijson.php', {
         params: {
             wd,
             pg,
@@ -76,7 +76,7 @@ export async function getList(
 }
 
 export async function getDetail(ids: string): Promise<IResponseData<IDetailData>> {
-    const { data } = await axios.get('/inc/api_mac10.php', {
+    const { data } = await axios.get('/inc/apijson.php', {
         params: {
             ac: 'detail',
             ids,

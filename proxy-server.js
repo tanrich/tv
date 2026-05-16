@@ -6,7 +6,7 @@ const app = express();
 app.use(express.static('dist'));
 app.use(
     createProxyMiddleware({
-        target: 'https://api.yzzy-api.com',
+        target: 'https://api.yyzy-tv.vip',
         changeOrigin: true,
         proxyTimeout: 1000000,
         pathFilter: '/inc',
@@ -14,7 +14,7 @@ app.use(
 );
 app.use(
     createProxyMiddleware({
-        target: 'https://api.yzzy-api.com',
+        target: 'https://api.yyzy-tv.vip',
         changeOrigin: true,
         proxyTimeout: 1000000,
         pathFilter: '/proxy/WAF',
