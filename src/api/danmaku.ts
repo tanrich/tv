@@ -1,6 +1,11 @@
 import axios from 'axios';
 // @ts-ignore — resolved to bundler entry via vite alias
-import { cut } from 'jieba-wasm';
+import { cut, with_dict } from 'jieba-wasm';
+import { DICT_TEXT } from './danmaku-dict';
+
+// 一次性注入影视专用词典，让 jieba 能识别"第一季"、"国语"、"剧场版"等后缀为独立词。
+// with_dict 是增量式（不清空默认词典），同步执行，模块加载时调用一次即可。
+with_dict(DICT_TEXT);
 
 export interface IDanmakuComment {
     p: string; // "时间,类型,字号,颜色"
@@ -44,33 +49,80 @@ async function doSearch(keyword: string): Promise<IAnimeSearchResult[]> {
 }
 
 /**
- * Stop words for filtering: language tags, common suffixes, short particles
+ * Season words (第一季~第十二季 / 第一部~第十二部) for STOP_WORDS.
+ * Numeric forms like "第1季" are handled by regex stripping in extractBaseName.
  */
-const STOP_WORDS = new Set([
+const SEASON_NUMBERS = ['一', '二', '三', '四', '五', '六', '七', '八', '九', '十', '十一', '十二'];
+const SEASON_WORDS = SEASON_NUMBERS.flatMap((n) => [`第${n}季`, `第${n}部`]);
+
+/**
+ * Stop words for filtering: language tags, version tags, type markers, season markers, common particles.
+ * All entries here must also be present in DICT_TEXT so jieba can segment them as independent words.
+ */
+const STOP_WORDS = new Set<string>([
     '版', '的', '之', '了', '在', '是', '我', '有', '和', '与',
-    '粤语', '国语', '英语', '日语', '韩语', '中字', '中英', '原声', '配音',
+    // 语言/字幕
+    '粤语', '国语', '英语', '日语', '韩语', '中字', '中英', '原声', '配音', '双语', '字幕',
+    // 类型
     '电影', '电视剧', '动漫', '综艺', '纪录片',
+    '剧场版', '特别篇', '番外篇', '大结局', '最终章', '上部', '下部', '正片', '预告',
+    'OVA', 'TV版', 'WEB版',
+    // 版本
+    '高清', '修复版', '导演版', '完整版', '未删减版', '重制版', '纪念版', '蓝光',
+    // 季数（数字"第N季"由正则剥离兜底）
+    'Season',
+    ...SEASON_WORDS,
 ]);
 
 /**
- * Extract core title from vod_name using jieba segmentation.
- * Filters out stop words, year numbers, and person names (from actor/director hints).
- * Falls back to regex stripping if jieba is not ready.
+ * Suffix patterns to strip from the tail of a title, applied recursively.
+ * Covers season markers, language tags, version tags, type markers, year, trailing digits.
+ * Acts as a fallback when jieba segmentation cannot isolate the suffix words.
+ */
+const SUFFIX_PATTERNS = [
+    /第[一二三四五六七八九十\d]+[季部]$/,                              // 第一季 / 第1部
+    /Season\s*\d+$/i,                                                  // Season 1
+    /S\d{1,2}$/,                                                       // S1, S12
+    /[ⅠⅡⅢⅣⅤⅥⅦⅧⅨⅩ]$/,                                                 // 罗马数字
+    /(国语|粤语|英语|日语|韩语|中字|中英|原声|配音|双语|字幕)版?$/,        // 语言/字幕
+    /(高清|修复版|导演版|完整版|未删减版|重制版|纪念版|蓝光)$/,            // 版本
+    /(剧场版|特别篇|番外篇|大结局|最终章|上部|下部|正片|预告|OVA|TV版|WEB版)$/, // 类型
+    /\d{4}$/,                                                          // 年份
+    /\s*\d+\s*$/,                                                      // 末尾数字
+];
+
+/**
+ * Recursively strip known suffixes from the tail of `name` until stable.
+ * Capped at 5 iterations to guard against pathological input.
+ * Returns the stripped result, or the original name if stripping yields empty.
  */
 function extractBaseName(name: string): string {
-    return name
-        .replace(/\d{4}$/, '')
-        .replace(/\s*\d+\s*$/, '')
-        .replace(/(粤语|国语|英语|日语|韩语|中字|中英|原声|配音)版?$/g, '')
-        .replace(/[^\s]*版(粤语|国语|英语|日语|韩语|中字|中英|原声|配音)?$/g, '')
-        .trim();
+    let prev: string;
+    let cur = name.trim();
+    let i = 0;
+    do {
+        prev = cur;
+        for (const re of SUFFIX_PATTERNS) {
+            cur = cur.replace(re, '').trim();
+        }
+    } while (cur !== prev && ++i < 5);
+    return cur || name.trim();
 }
 
 /**
  * Use jieba to segment vod_name and produce a clean core title.
  * Removes stop words, year-like tokens, and known person names.
+ *
+ * With the custom dict injected, jieba can now isolate "第一季", "国语" etc. as
+ * independent words, so STOP_WORDS filtering actually takes effect.
+ *
+ * Fallback chain:
+ *   1. jieba cut + STOP_WORDS filter (preferred — most accurate)
+ *   2. extractBaseName recursive suffix stripping (regex fallback for edge cases)
+ *   3. original name (last resort, never return empty)
  */
 function segmentCoreName(name: string, knownNames: string[] = []): string {
+    const fallback = extractBaseName(name);
     try {
         const words = cut(name, true);
         const nameSet = new Set(knownNames.filter(Boolean));
@@ -82,9 +134,14 @@ function segmentCoreName(name: string, knownNames: string[] = []): string {
             if (nameSet.has(w)) return false;
             return true;
         });
-        return coreWords.join('') || extractBaseName(name);
+        const joined = coreWords.join('').trim();
+        // jieba 过滤后非空、且与原 name 不同（说明确实切出了噪声词）则用 jieba 结果；
+        // 再用 extractBaseName 做最终清理，处理"国语版"这种 jieba 切成整体词但 STOP_WORDS 未覆盖的情况。
+        // 否则回退到正则递归剥离。极端情况下回退到原 name，避免返回空串导致搜索策略失效。
+        if (joined && joined !== name) return extractBaseName(joined) || joined;
+        return fallback || name;
     } catch {
-        return extractBaseName(name);
+        return fallback || name;
     }
 }
 

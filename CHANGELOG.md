@@ -4,6 +4,12 @@ All notable changes to **richBox** will be documented in this file.
 
 ## [Unreleased]
 
+## [0.7.1] - 2026-06-30
+
+### Fixes
+
+-   **弹幕搜索关键词提取优化**: 给 jieba-wasm 注入影视专用分词词典（季数/语言/版本/类型标记），让"三体第一季国语"能正确切分为"三体"+"第一季"+"国语"并过滤后缀得到核心片名"三体"；同时将 `extractBaseName` 改造为递归尾部正则剥离作为兜底，`segmentCoreName` 增加 jieba 过滤结果二次清理。显著提升带后缀片名的弹幕匹配命中率 (`src/api/danmaku-dict.ts`, `src/api/danmaku.ts`)
+
 ## [0.7.0] - 2026-06-29
 
 ### Performance
