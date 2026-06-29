@@ -4,6 +4,14 @@ All notable changes to **richBox** will be documented in this file.
 
 ## [Unreleased]
 
+## [0.8.0] - 2026-06-29
+
+### Performance
+
+-   **jieba-wasm 懒加载**: 将 3.8MB jieba-wasm 从 DetailView async chunk 中分离，改为首次弹幕搜索时通过动态 `import()` 加载；`segmentCoreName` 改为 async，未就绪时回退到 `extractBaseName` 正则。详情页首屏不再被 WASM 下载+编译阻塞 (`src/api/danmaku.ts`)
+-   **移除详情页自动播放视频**: 打开详情页不再自动初始化播放器并加载 m3u8 源，避免占用带宽；用户点击选集后才播放，并添加空播放器占位提示"点击选集开始播放"（PC/Mobile 自适配）(`src/components/DetailView.vue`)
+-   **stale 检查修复**: 快速切换详情时补充 `resolveDanmaku()` 防止 `injectDanmaku` 挂起 (`src/components/DetailView.vue`)
+
 ## [0.7.2] - 2026-06-30
 
 ### Fixes

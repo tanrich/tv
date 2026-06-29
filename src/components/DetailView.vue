@@ -424,12 +424,6 @@ const fetchDanmaku = async () => {
     danmakuTotal.value = 0;
     if (!d.vod_name) return;
 
-    // Auto-load first episode without playing
-    const urls = d.vod_play_url_parse;
-    if (urls?.length) {
-        playVideo(urls[0], 0, undefined, false);
-    }
-
     danmakuLoading.value = true;
     let resolveDanmaku: () => void;
     danmakuReady = new Promise<void>((resolve) => {
@@ -444,7 +438,10 @@ const fetchDanmaku = async () => {
     const expectedEpisodes = d.vod_play_url_parse?.length || 0;
     const results = await searchEpisodes(hint, expectedEpisodes);
     // Stale check: if user switched to another detail while we were awaiting, discard
-    if (version !== fetchVersion) return;
+    if (version !== fetchVersion) {
+        resolveDanmaku!();
+        return;
+    }
     if (results.length > 0) {
         cachedEpisodes = results[0].episodes ?? [];
         // Show the lesser of API episodes and video source episodes,
@@ -534,6 +531,7 @@ onBeforeUnmount(() => {
         </div>
         <div class="video-wrapper">
             <div ref="artRef" class="art-player"></div>
+            <div v-if="!videoData.src" class="video-placeholder">点击选集开始播放</div>
         </div>
     </div>
 </template>
@@ -671,6 +669,18 @@ onBeforeUnmount(() => {
         .art-player {
             width: 100%;
             aspect-ratio: 16 / 9;
+        }
+
+        .video-placeholder {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-tertiary);
+            font-size: 14px;
+            background: var(--bg-secondary);
+            border-radius: 4px;
         }
     }
 }

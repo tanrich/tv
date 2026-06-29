@@ -1,12 +1,25 @@
 import axios from 'axios';
-// @ts-ignore — resolved to bundler entry via vite alias
-// eslint-disable-next-line camelcase -- jieba-wasm API uses snake_case
-import { cut, with_dict } from 'jieba-wasm';
-import { DICT_TEXT } from './danmaku-dict';
 
-// 一次性注入影视专用词典，让 jieba 能识别"第一季"、"国语"、"剧场版"等后缀为独立词。
-// with_dict 是增量式（不清空默认词典），同步执行，模块加载时调用一次即可。
-with_dict(DICT_TEXT);
+// jieba-wasm 懒加载：3.8MB WASM 不静态打入 DetailView chunk，首次 searchEpisodes 时才动态加载
+let jiebaCut: ((text: string, hmm?: boolean) => string[]) | null = null;
+let jiebaPromise: Promise<void> | null = null;
+
+async function ensureJieba(): Promise<void> {
+    if (jiebaCut) return;
+    if (!jiebaPromise) {
+        jiebaPromise = (async () => {
+            // @ts-ignore — resolved to bundler entry via vite alias
+            // eslint-disable-next-line camelcase -- jieba-wasm API uses snake_case
+            const jieba = await import('jieba-wasm');
+            const { DICT_TEXT } = await import('./danmaku-dict');
+            // 一次性注入影视专用词典，让 jieba 能识别"第一季"、"国语"、"剧场版"等后缀为独立词。
+            // with_dict 是增量式（不清空默认词典），同步执行，模块加载时调用一次即可。
+            jieba.with_dict(DICT_TEXT);
+            jiebaCut = jieba.cut;
+        })();
+    }
+    await jiebaPromise;
+}
 
 export interface IDanmakuComment {
     p: string; // "时间,类型,字号,颜色"
@@ -122,10 +135,12 @@ function extractBaseName(name: string): string {
  *   2. extractBaseName recursive suffix stripping (regex fallback for edge cases)
  *   3. original name (last resort, never return empty)
  */
-function segmentCoreName(name: string, knownNames: string[] = []): string {
+async function segmentCoreName(name: string, knownNames: string[] = []): Promise<string> {
     const fallback = extractBaseName(name);
     try {
-        const words = cut(name, true);
+        await ensureJieba();
+        if (!jiebaCut) return fallback || name;
+        const words = jiebaCut(name, true);
         const nameSet = new Set(knownNames.filter(Boolean));
         const coreWords = words.filter((w: string) => {
             if (w.trim().length === 0) return false;
@@ -212,7 +227,7 @@ export async function searchEpisodes(
         ...(director?.split(/[,，]/).map((s) => s.trim()) ?? []),
     ];
 
-    const coreName = segmentCoreName(name, knownNames);
+    const coreName = await segmentCoreName(name, knownNames);
     const leadActor = actor?.split(/[,，]/)[0]?.trim();
 
     // Collect all candidates (deduplicated by animeId)
