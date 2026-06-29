@@ -4,6 +4,12 @@ All notable changes to **richBox** will be documented in this file.
 
 ## [Unreleased]
 
+## [0.7.0] - 2026-06-29
+
+### Performance
+
+-   **首次跳转优化**: 将 `DetailView` 改为异步组件加载，避免从首页跳转到搜索页时同步加载 artplayer / hls.js / jieba-wasm 等大依赖（约 6.8MB）；改造后首次跳转只需下载 SearchView 自身约 57KB，大依赖延迟到用户点击搜索结果后才加载，附带 loading 占位 (`SearchView.vue`)
+
 ## [0.6.2] - 2026-05-16
 
 ### Fixes

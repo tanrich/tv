@@ -1,13 +1,24 @@
 <script setup lang="ts">
-import { computed, nextTick, onBeforeMount, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue';
+import { computed, defineAsyncComponent, h, nextTick, onBeforeMount, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { Tag, Card, Spin, Page, Exception } from 'view-ui-plus';
 import SearchComponent from '../components/SearchComponent.vue';
 import { createEmptyDetailData } from '@/common/util';
 import { getDetail, getList, type IDetailData, type IResponseData, type IVodItem } from '@/api';
-import DetailView from '@/components/DetailView.vue';
 import HistoryPanel from '@/components/HistoryPanel.vue';
 import { useTheme } from '@/composables/useTheme';
+
+// 异步加载 DetailView，避免首次跳转到 search 时阻塞
+// （DetailView 含 artplayer / hls.js / artplayer-plugin-danmuku / jieba-wasm 等大依赖）
+const DetailView = defineAsyncComponent({
+    loader: () => import('@/components/DetailView.vue'),
+    loadingComponent: () =>
+        h('div', { class: 'detail-loading' }, [
+            h('div', { class: 'detail-loading-spinner' }),
+            '加载中...',
+        ]),
+    delay: 200, // 延迟 200ms 显示 loading，避免快速加载时闪烁
+});
 
 const router = useRouter();
 const route = useRoute();
@@ -342,6 +353,33 @@ const goHome = () => {
         right: 0;
         bottom: 0;
         z-index: 99;
+    }
+
+    /* DetailView 异步加载时的占位 */
+    .detail-loading {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        min-height: 360px;
+        gap: 16px;
+        color: var(--text-secondary);
+        font-size: 14px;
+
+        .detail-loading-spinner {
+            width: 32px;
+            height: 32px;
+            border: 3px solid var(--border-color);
+            border-top-color: var(--btn-primary-bg);
+            border-radius: 50%;
+            animation: detail-loading-spin 0.8s linear infinite;
+        }
+    }
+
+    @keyframes detail-loading-spin {
+        to {
+            transform: rotate(360deg);
+        }
     }
 
     .container {
