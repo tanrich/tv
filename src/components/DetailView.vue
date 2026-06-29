@@ -4,7 +4,7 @@ import type { IArtplayerDanmuku, IEpisodeInfo, ISearchHint } from '@/api/danmaku
 import Artplayer from 'artplayer';
 import Hls from 'hls.js';
 import artplayerPluginDanmuku from 'artplayer-plugin-danmuku';
-import { computed, onBeforeUnmount, reactive, ref } from 'vue';
+import { computed, onBeforeUnmount, reactive, ref, watch } from 'vue';
 import { searchEpisodes, getComments, transformToArtplayerDanmuku } from '@/api/danmaku';
 import { useHistory } from '@/composables/useHistory';
 
@@ -452,6 +452,15 @@ const fetchDanmaku = async () => {
     resolveDanmaku!();
     danmakuReady = null;
 };
+
+// Auto-trigger fetchDanmaku when vod_id changes (including async-component mount).
+// This decouples from parent's ref-call timing — the async chunk may still be
+// downloading when the parent's nextTick fires, leaving detailViewRef undefined.
+watch(
+    () => props.data.vod_id,
+    () => fetchDanmaku(),
+    { immediate: true },
+);
 
 defineExpose({ fetchDanmaku, playVideo });
 

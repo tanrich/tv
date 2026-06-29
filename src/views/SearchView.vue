@@ -148,11 +148,13 @@ const updateDetail = async (vodId: string, ep?: number, seek?: number) => {
     if (isMobile.value) {
         showDetail.value = true;
     }
-    // Scroll detail area to top
-    nextTick(() => {
+    // Scroll detail area to top + auto-play from history.
+    // DetailView is an async component; on first load its instance may not be
+    // ready in the next tick (chunk still downloading). fetchDanmaku is now
+    // self-triggered by DetailView's vod_id watcher, so we only need to handle
+    // playVideo here — wait for the ref if it isn't mounted yet.
+    const onDetailReady = () => {
         detailWrapperRef.value?.scrollTo(0, 0);
-        detailViewRef.value?.fetchDanmaku();
-        // Auto-play from history record
         if (ep !== undefined && ep >= 0 && data.detailData.vod_play_url_parse[ep]) {
             const src = data.detailData.vod_play_url_parse[ep];
             detailViewRef.value?.playVideo(src, ep, seek);
@@ -172,7 +174,17 @@ const updateDetail = async (vodId: string, ep?: number, seek?: number) => {
             // Clean up ep/seek from query to avoid re-seek on refresh
             router.replace({ query: { keyword: route.query.keyword, vodId } });
         }
-    });
+    };
+    if (detailViewRef.value) {
+        nextTick(onDetailReady);
+    } else {
+        const stop = watch(detailViewRef, (val) => {
+            if (val) {
+                onDetailReady();
+                stop();
+            }
+        });
+    }
 };
 const goBack = () => {
     showDetail.value = false;

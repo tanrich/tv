@@ -4,6 +4,12 @@ All notable changes to **richBox** will be documented in this file.
 
 ## [Unreleased]
 
+## [0.8.1] - 2026-06-29
+
+### Fixes
+
+-   **修复异步组件首次加载弹幕不请求**: DetailView 作为异步组件首次加载时，SearchView 的 `nextTick` 中 `detailViewRef` 尚未挂载，`fetchDanmaku` 调用被可选链跳过导致弹幕永不请求。改为 DetailView 内部 `watch(vod_id, { immediate: true })` 自动触发 `fetchDanmaku`；从历史记录续播的 `playVideo` 同样存在竞态，改用 `watch(detailViewRef)` 等待实例就绪后再调用 (`src/components/DetailView.vue`, `src/views/SearchView.vue`)
+
 ## [0.8.0] - 2026-06-29
 
 ### Performance
