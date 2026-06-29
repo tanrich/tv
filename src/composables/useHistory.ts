@@ -1,5 +1,5 @@
-import { ref, computed } from 'vue';
 import type { IHistoryRecord } from './useHistoryDB';
+import { ref, computed } from 'vue';
 import { putRecord, getRecentRecords, getAllRecords } from './useHistoryDB';
 
 const records = ref<IHistoryRecord[]>([]);
@@ -8,7 +8,6 @@ const DEFAULT_LIMIT = 10;
 
 function getDateLabel(timestamp: number): string {
     const now = new Date();
-    const date = new Date(timestamp);
     const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
     const yesterdayStart = todayStart - 86400000;
 

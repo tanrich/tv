@@ -4,13 +4,13 @@ import type { IArtplayerDanmuku, IEpisodeInfo, ISearchHint } from '@/api/danmaku
 import Artplayer from 'artplayer';
 import Hls from 'hls.js';
 import artplayerPluginDanmuku from 'artplayer-plugin-danmuku';
-import { computed, onBeforeUnmount, reactive, ref, watch } from 'vue';
+import { computed, onBeforeUnmount, reactive, ref } from 'vue';
 import { searchEpisodes, getComments, transformToArtplayerDanmuku } from '@/api/danmaku';
 import { useHistory } from '@/composables/useHistory';
 
 const { saveProgress } = useHistory();
 
-const artRef = ref<HTMLElement>();
+const artRef = ref<HTMLDivElement>();
 let art: Artplayer | null = null;
 const videoData = reactive<{ src: string }>({ src: '' });
 let currentEpisodeIndex = -1;
@@ -149,7 +149,7 @@ function initArtplayer(src: string, danmuku: IArtplayerDanmuku[] = []) {
                 switch: true,
                 onSwitch(item: any) {
                     const next = !item.switch;
-                    art!.plugins.artplayerPluginDanmuku[next ? 'show' : 'hide']();
+                    (art!.plugins.artplayerPluginDanmuku as any)[next ? 'show' : 'hide']();
                     item.tooltip = next ? '开启' : '关闭';
                     return next;
                 },
@@ -216,7 +216,7 @@ function initArtplayer(src: string, danmuku: IArtplayerDanmuku[] = []) {
 // --- Long-press speed playback logic ---
 function enterSpeedMode() {
     if (isSpeedMode || !art) return;
-    if (art.paused) return; // 暂停状态不触发
+    if (art.video.paused) return; // 暂停状态不触发
     isSpeedMode = true;
     originalRate = art.playbackRate;
     art.playbackRate = SPEED_RATE;
@@ -396,8 +396,8 @@ const playVideo = async (src: string, index: number, seekTime?: number, autoPlay
     setTimeout(() => {
         (document.activeElement as HTMLElement)?.blur();
         if (art) {
-            art.isFocus = true;
-            art.isInput = false;
+            (art as any).isFocus = true;
+            (art as any).isInput = false;
         }
     }, 0);
 
@@ -407,8 +407,9 @@ const playVideo = async (src: string, index: number, seekTime?: number, autoPlay
         const danmuku = await loadDanmaku(index);
         // Guard: user may have switched to another episode/video while loading
         if (videoData.src !== src || !art) return;
-        art.plugins.artplayerPluginDanmuku.config({ danmuku });
-        art.plugins.artplayerPluginDanmuku.load();
+        const danmukuPlugin = art.plugins.artplayerPluginDanmuku as any;
+        danmukuPlugin.config({ danmuku });
+        danmukuPlugin.load();
     };
     injectDanmaku();
 };
@@ -431,8 +432,8 @@ const fetchDanmaku = async () => {
 
     danmakuLoading.value = true;
     let resolveDanmaku: () => void;
-    danmakuReady = new Promise<void>((r) => {
-        resolveDanmaku = r;
+    danmakuReady = new Promise<void>((resolve) => {
+        resolveDanmaku = resolve;
     });
     const hint: ISearchHint = {
         name: d.vod_name,

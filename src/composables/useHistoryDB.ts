@@ -4,10 +4,10 @@ export interface IHistoryRecord {
     vodPic: string;
     totalEpisodes: number;
     currentEpisode: number; // 0-based index
-    currentTime: number;    // seconds
-    duration: number;       // seconds
-    progress: number;       // 0-100
-    updatedAt: number;      // timestamp ms
+    currentTime: number; // seconds
+    duration: number; // seconds
+    progress: number; // 0-100
+    updatedAt: number; // timestamp ms
 }
 
 const DB_NAME = 'tv-history';

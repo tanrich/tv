@@ -4,6 +4,12 @@ All notable changes to **richBox** will be documented in this file.
 
 ## [Unreleased]
 
+## [0.7.2] - 2026-06-30
+
+### Fixes
+
+-   **修复 eslint 和 vue-tsc 类型检查错误**: 修复 `DetailView.vue` 中 artplayer 实例的类型不匹配（container HTMLElement→HTMLDivElement、`art.paused`→`art.video.paused`、readonly 属性 `isFocus`/`isInput` 加 `as any` 断言、`plugins.artplayerPluginDanmuku` unknown 类型断言）、删除未使用的 `watch` import、Promise 参数命名规范；`danmaku.ts` 中 `IArtplayerDanmuku.mode` 类型从 `number` 收窄为 `0|1|2` 以兼容 artplayer-plugin-danmuku；`useHistory.ts` 修正 import 顺序并删除未用变量；`useHistoryDB.ts` 修复 no-multi-spaces
+
 ## [0.7.1] - 2026-06-30
 
 ### Fixes

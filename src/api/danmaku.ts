@@ -1,5 +1,6 @@
 import axios from 'axios';
 // @ts-ignore — resolved to bundler entry via vite alias
+// eslint-disable-next-line camelcase -- jieba-wasm API uses snake_case
 import { cut, with_dict } from 'jieba-wasm';
 import { DICT_TEXT } from './danmaku-dict';
 
@@ -27,7 +28,7 @@ export interface IArtplayerDanmuku {
     text: string;
     time: number;
     color?: string;
-    mode?: number;
+    mode?: 0 | 1 | 2;
 }
 
 export interface ISearchHint {
@@ -80,15 +81,15 @@ const STOP_WORDS = new Set<string>([
  * Acts as a fallback when jieba segmentation cannot isolate the suffix words.
  */
 const SUFFIX_PATTERNS = [
-    /第[一二三四五六七八九十\d]+[季部]$/,                              // 第一季 / 第1部
-    /Season\s*\d+$/i,                                                  // Season 1
-    /S\d{1,2}$/,                                                       // S1, S12
-    /[ⅠⅡⅢⅣⅤⅥⅦⅧⅨⅩ]$/,                                                 // 罗马数字
-    /(国语|粤语|英语|日语|韩语|中字|中英|原声|配音|双语|字幕)版?$/,        // 语言/字幕
-    /(高清|修复版|导演版|完整版|未删减版|重制版|纪念版|蓝光)$/,            // 版本
+    /第[一二三四五六七八九十\d]+[季部]$/, // 第一季 / 第1部
+    /Season\s*\d+$/i, // Season 1
+    /S\d{1,2}$/, // S1, S12
+    /[ⅠⅡⅢⅣⅤⅥⅦⅧⅨⅩ]$/, // 罗马数字
+    /(国语|粤语|英语|日语|韩语|中字|中英|原声|配音|双语|字幕)版?$/, // 语言/字幕
+    /(高清|修复版|导演版|完整版|未删减版|重制版|纪念版|蓝光)$/, // 版本
     /(剧场版|特别篇|番外篇|大结局|最终章|上部|下部|正片|预告|OVA|TV版|WEB版)$/, // 类型
-    /\d{4}$/,                                                          // 年份
-    /\s*\d+\s*$/,                                                      // 末尾数字
+    /\d{4}$/, // 年份
+    /\s*\d+\s*$/, // 末尾数字
 ];
 
 /**
@@ -307,7 +308,7 @@ export function transformToArtplayerDanmuku(comments: IDanmakuComment[]): IArtpl
             const colorNum = parseInt(parts[3]) || 16777215;
             const color = '#' + colorNum.toString(16).padStart(6, '0');
 
-            let mode = 0; // scroll
+            let mode: 0 | 1 | 2 = 0; // scroll
             if (type === 5) mode = 1; // top
             else if (type === 4) mode = 2; // bottom
 
